@@ -12,7 +12,7 @@ st.set_page_config(
 # 2. 헤더 디자인 (깨지지 않는 이모지 🏫 사용)
 st.markdown("""
 <div style='text-align: center; padding: 20px 0 10px 0;'>
-    <h1 style='color: #1E3A8A; font-size: 2.5rem; margin: 0; white-space: nowrap;'>🏫 양명여고 진로진학부</h1>
+    <h1 style='color: #1E3A8A; font-size: 2.5rem; margin: 0;'>🏫 양명여고 진로진학부</h1>
 </div>
 <div style='text-align: center; padding-bottom: 20px;'>
     <h2 style='color: #333; font-size: 1.3rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
@@ -25,7 +25,7 @@ st.markdown("""
 def load_data():
     file_path = 'data.csv' if os.path.exists('data.csv') else 'data.xlsx'
     if not os.path.exists(file_path):
-        st.error("데이터 파일을 찾을 수 없습니다. GitHub에 data.csv 또는 data.xlsx를 올려주세요.")
+        st.error("데이터 파일을 찾을 수 없습니다.")
         return pd.DataFrame()
     
     try:
@@ -57,7 +57,7 @@ def load_data():
         df = df.drop_duplicates(subset=['대학명', '모집단위', '핵심과목', '권장과목'], keep='first')
         return df
     except Exception as e:
-        st.error(f"파일을 읽는 중 오류가 발생했습니다: {e}")
+        st.error(f"파일 오류: {e}")
         return pd.DataFrame()
 
 df = load_data()
@@ -76,19 +76,41 @@ if not df.empty:
     if submit_button:
         if u_keyword or d_keyword:
             result = df.copy()
+            
+            # 짧은 코드로 분리하여 잘림 방지
             if u_keyword:
-                result = result[result['대학명'].str.contains(u_keyword, na=False, case=False)]
+                mask1 = result['대학명'].str.contains(u_keyword, na=False, case=False)
+                result = result[mask1]
             if d_keyword:
-                result = result[result['모집단위'].str.contains(d_keyword, na=False, case=False)]
+                mask2 = result['모집단위'].str.contains(d_keyword, na=False, case=False)
+                result = result[mask2]
             
             if result.empty:
                 st.warning("❌ 검색 결과가 없습니다.")
             else:
                 st.success(f"✅ 총 **{len(result)}건**의 결과를 찾았습니다.")
                 for _, row in result.iterrows():
-                    with st.expander(f"🏫 [{row['대학명']}] {row['모집단위'].strip()}", expanded=True):
+                    dept_name = row['모집단위'].strip()
+                    with st.expander(f"🏫 [{row['대학명']}] {dept_name}", expanded=True):
                         if row['핵심과목'] and row['핵심과목'] != '-': 
                             st.markdown(f"**📌 핵심과목:** {row['핵심과목']}")
                         if row['권장과목'] and row['권장과목'] != '-': 
                             st.markdown(f"**💡 권장과목:** {row['권장과목']}")
-                        if row['비고'] and row['비고'] !=
+                        
+                        # 에러가 났던 부분도 짧게 수정 완료!
+                        has_note = row['비고']
+                        note_valid = row['비고'] != '-'
+                        if has_note and note_valid: 
+                            st.markdown(f"**📝 비고:** {row['비고']}")
+        else:
+            st.info("💡 대학이나 학과 중 하나라도 입력해 주세요.")
+else:
+    st.info("데이터를 불러오는 중이거나 파일이 없습니다.")
+
+# 5. 하단 푸터
+st.markdown("""
+    <br><br><hr>
+    <div style='text-align: center; color: gray; font-size: 0.9rem;'>
+        © 2026 양명여자고등학교 진로진학부 | 꿈과 미래를 잇는 통로
+    </div>
+""", unsafe_allow_html=True)
