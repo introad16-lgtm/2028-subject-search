@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+from PIL import Image
 
 # 1. 웹 페이지 설정
 st.set_page_config(
@@ -9,16 +10,30 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. 헤더 디자인 (양명여고 진로진학부 강력 강조)
+# 2. 로고 이미지와 헤더 출력 (🏫 이모지 대신 선생님의 로고 사용)
+# 로고 파일이 서버에 있는지 확인하고 불러옵니다.
+col1, col2, col3 = st.columns([1, 2, 1]) # 로고를 중앙에 배치하기 위해 화면을 3칸으로 나눔
+
+with col2: # 가운데 칸에 이미지 배치
+    # logo.jpg 또는 logo.png 파일을 찾습니다.
+    logo_path = 'logo.jpg' if os.path.exists('logo.jpg') else 'logo.png'
+    
+    if os.path.exists(logo_path):
+        # 이미지가 있으면 띄워줍니다 (가로 폭에 맞게 자동 조절)
+        st.image(logo_path, use_column_width=True)
+    else:
+        # 이미지가 없을 경우를 대비한 예비 텍스트
+        st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>양명여고 진로진학부</h1>", unsafe_allow_html=True)
+
+# 그 아래 제목 텍스트 (이제 🏫 이모지는 없습니다)
 st.markdown("""
-    <div style='text-align: center; padding: 20px;'>
-        <h1 style='color: #1E3A8A; font-size: 3.5rem; margin-bottom: 5px;'>🏫 양명여고 진로진학부</h1>
+    <div style='text-align: center; padding: 10px;'>
         <h2 style='color: #333; font-size: 1.8rem;'>2028학년도 대학별 권장과목 검색기</h2>
         <p style='color: #666; font-size: 1.1rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
     </div>
 """, unsafe_allow_html=True)
 
-# 3. 데이터 로드 함수 (단과대+학과 합치기 로직 적용)
+# 3. 데이터 로드 함수 (이전과 동일)
 @st.cache_data
 def load_data():
     file_path = 'data.csv' if os.path.exists('data.csv') else 'data.xlsx'
@@ -27,7 +42,6 @@ def load_data():
         return pd.DataFrame()
     
     try:
-        # 파일 읽기
         if file_path.endswith('.csv'):
             try:
                 df = pd.read_csv(file_path, skiprows=2, encoding='utf-8')
@@ -36,37 +50,19 @@ def load_data():
         else:
             df = pd.read_excel(file_path, skiprows=2)
             
-        # 🌟 핵심 해결 부분: 엑셀 열 이름이 깨지든 말든, 위치(순서)를 기준으로 안전하게 데이터를 가져옵니다.
-        # [2]번째 열: 대학명
-        # [3]번째 열: 단과대 (예: 첨단융합)
-        # [4]번째 열: 학과명 (예: 시스템반도체학부)
-        # [5]번째 열: 핵심과목
-        # [6]번째 열: 권장과목
-        
         df['대학명'] = df.iloc[:, 2].fillna('').astype(str)
-        
-        # 단과대와 학과명을 띄어쓰기로 합쳐서 통째로 검색되게 만듭니다. (예: "첨단융합 시스템반도체학부")
         col3 = df.iloc[:, 3].fillna('').astype(str)
         col4 = df.iloc[:, 4].fillna('').astype(str)
         df['모집단위'] = col3 + " " + col4
-        
         df['핵심과목'] = df.iloc[:, 5].fillna('-').astype(str)
         
-        # 권장과목, 비고 열이 존재하는지 안전하게 확인
-        if len(df.columns) > 6:
-            df['권장과목'] = df.iloc[:, 6].fillna('-').astype(str)
-        else:
-            df['권장과목'] = '-'
+        if len(df.columns) > 6: df['권장과목'] = df.iloc[:, 6].fillna('-').astype(str)
+        else: df['권장과목'] = '-'
             
-        if len(df.columns) > 7:
-            df['비고'] = df.iloc[:, 7].fillna('-').astype(str)
-        else:
-            df['비고'] = '-'
+        if len(df.columns) > 7: df['비고'] = df.iloc[:, 7].fillna('-').astype(str)
+        else: df['비고'] = '-'
 
-        # 불필요한 'nan' 글자 청소
         df = df.replace('nan', '', regex=True)
-
-        # 완전 중복 데이터 제거
         df = df.drop_duplicates(subset=['대학명', '모집단위', '핵심과목', '권장과목'], keep='first')
         
         return df
@@ -104,9 +100,7 @@ if submit_button:
         else:
             st.success(f"✅ 총 **{len(result)}건**의 검색 결과를 찾았습니다.")
             for _, row in result.iterrows():
-                # 학과 이름 앞뒤 공백 깔끔하게 정리
                 dept_name = row['모집단위'].strip()
-                
                 with st.expander(f"🏫 [{row['대학명']}] {dept_name}", expanded=True):
                     if row['핵심과목'] and row['핵심과목'] != '-': st.markdown(f"**📌 핵심과목:** {row['핵심과목']}")
                     if row['권장과목'] and row['권장과목'] != '-': st.markdown(f"**💡 권장과목:** {row['권장과목']}")
