@@ -12,10 +12,11 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 확장자 상관없이 이미지를 무조건 표준 PNG로 읽어오는 함수 ---
+# --- 확장자 상관없이 이미지를 읽어오는 함수 ---
 def get_image_html():
     logo_path = None
-    for file_name in ['logo.png', 'logo.jpg', 'logo.jpeg', 'logo.PNG', 'logo.JPG']:
+    files = ['logo.png', 'logo.jpg', 'logo.jpeg', 'logo.PNG', 'logo.JPG']
+    for file_name in files:
         if os.path.exists(file_name):
             logo_path = file_name
             break
@@ -26,13 +27,13 @@ def get_image_html():
             buffered = io.BytesIO()
             img.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            # 로고 크기를 60px로 맞춰서 글자 크기와 밸런스를 맞췄습니다.
-            return f'<img src="data:image/png;base64,{img_str}" style="height: 60px; margin-right: 15px;">'
+            html = f'<img src="data:image/png;base64,{img_str}" style="height: 60px; margin-right: 15px;">'
+            return html
         except Exception:
             return ""
     return ""
 
-# 2. 헤더 디자인 (글자 크기 축소 및 밸런스 조절)
+# 2. 헤더 디자인
 img_html = get_image_html()
 
 st.markdown(f"""
@@ -51,7 +52,7 @@ st.markdown(f"""
 def load_data():
     file_path = 'data.csv' if os.path.exists('data.csv') else 'data.xlsx'
     if not os.path.exists(file_path):
-        st.error("데이터 파일(data.csv 또는 data.xlsx)을 찾을 수 없습니다.")
+        st.error("데이터 파일을 찾을 수 없습니다.")
         return pd.DataFrame()
     
     try:
@@ -84,28 +85,61 @@ def load_data():
         
         return df
     except Exception as e:
-        st.error(f"파일을 읽는 중 오류 발생: {e}")
+        st.error(f"파일 오류: {e}")
         return pd.DataFrame()
 
 df = load_data()
 
-# 4. 검색 창 및 버튼 디자인
+# 4. 검색 창 및 버튼
 if not df.empty:
     with st.form("search_form"):
         st.markdown("### 🔍 어디를 찾으시나요?")
         col1, col2 = st.columns(2)
         
         with col1:
-            u_keyword = st.text_input("🏫 대학 이름", placeholder="예: 서울대, 동국대")
+            u_keyword = st.text_input("🏫 대학 이름", placeholder="예: 서울대")
         with col2:
-            d_keyword = st.text_input("📚 학과/모집단위", placeholder="예: 컴퓨터, 반도체, 경영")
+            d_keyword = st.text_input("📚 학과/모집단위", placeholder="예: 컴퓨터")
         
         submit_button = st.form_submit_button("🔍 검색하기", use_container_width=True)
 
-    # 5. 검색 로직 실행
+    # 5. 검색 로직 (잘리지 않게 짧은 코드로 수정)
     if submit_button:
         if u_keyword or d_keyword:
             result = df.copy()
             
+            # 대학명 검색 (짧은 코드로 분리)
             if u_keyword:
-                result = result[result['대학명'].str.
+                mask_univ = result['대학명'].str.contains(u_keyword, na=False, case=False)
+                result = result[mask_univ]
+                
+            # 학과명 검색 (짧은 코드로 분리)
+            if d_keyword:
+                mask_dept = result['모집단위'].str.contains(d_keyword, na=False, case=False)
+                result = result[mask_dept]
+                
+            if result.empty:
+                st.warning("❌ 검색 결과가 없습니다.")
+            else:
+                st.success(f"✅ 총 **{len(result)}건**의 검색 결과를 찾았습니다.")
+                for _, row in result.iterrows():
+                    dept_name = row['모집단위'].strip()
+                    with st.expander(f"🏫 [{row['대학명']}] {dept_name}", expanded=True):
+                        if row['핵심과목'] and row['핵심과목'] != '-': 
+                            st.markdown(f"**📌 핵심과목:** {row['핵심과목']}")
+                        if row['권장과목'] and row['권장과목'] != '-': 
+                            st.markdown(f"**💡 권장과목:** {row['권장과목']}")
+                        if row['비고'] and row['비고'] != '-': 
+                            st.markdown(f"**📝 비고:** {row['비고']}")
+        else:
+            st.info("💡 대학 이름이나 학과명 중 하나라도 입력해 주세요!")
+    else:
+        st.info("찾으시는 대학이나 학과를 입력하고 검색 버튼을 눌러주세요.")
+
+# 6. 하단 푸터
+st.markdown("""
+    <br><br><hr>
+    <div style='text-align: center; color: gray; font-size: 0.9rem;'>
+        © 2026 양명여자고등학교 진로진학부 | 꿈과 미래를 잇는 통로
+    </div>
+""", unsafe_allow_html=True)
