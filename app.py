@@ -26,7 +26,7 @@ def get_image_html():
             buffered = io.BytesIO()
             img.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            # 🌟 로고 크기도 글자에 맞춰 80px -> 60px로 살짝 줄여 비율을 맞췄습니다.
+            # 로고 크기를 60px로 맞춰서 글자 크기와 밸런스를 맞췄습니다.
             return f'<img src="data:image/png;base64,{img_str}" style="height: 60px; margin-right: 15px;">'
         except Exception:
             return ""
@@ -67,4 +67,45 @@ def load_data():
         col3 = df.iloc[:, 3].fillna('').astype(str)
         col4 = df.iloc[:, 4].fillna('').astype(str)
         df['모집단위'] = col3 + " " + col4
-        df['핵심과목'] = df.iloc
+        df['핵심과목'] = df.iloc[:, 5].fillna('-').astype(str)
+        
+        if len(df.columns) > 6: 
+            df['권장과목'] = df.iloc[:, 6].fillna('-').astype(str)
+        else: 
+            df['권장과목'] = '-'
+            
+        if len(df.columns) > 7: 
+            df['비고'] = df.iloc[:, 7].fillna('-').astype(str)
+        else: 
+            df['비고'] = '-'
+
+        df = df.replace('nan', '', regex=True)
+        df = df.drop_duplicates(subset=['대학명', '모집단위', '핵심과목', '권장과목'], keep='first')
+        
+        return df
+    except Exception as e:
+        st.error(f"파일을 읽는 중 오류 발생: {e}")
+        return pd.DataFrame()
+
+df = load_data()
+
+# 4. 검색 창 및 버튼 디자인
+if not df.empty:
+    with st.form("search_form"):
+        st.markdown("### 🔍 어디를 찾으시나요?")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            u_keyword = st.text_input("🏫 대학 이름", placeholder="예: 서울대, 동국대")
+        with col2:
+            d_keyword = st.text_input("📚 학과/모집단위", placeholder="예: 컴퓨터, 반도체, 경영")
+        
+        submit_button = st.form_submit_button("🔍 검색하기", use_container_width=True)
+
+    # 5. 검색 로직 실행
+    if submit_button:
+        if u_keyword or d_keyword:
+            result = df.copy()
+            
+            if u_keyword:
+                result = result[result['대학명'].str.
