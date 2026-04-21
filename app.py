@@ -1,9 +1,6 @@
 import streamlit as st
 import pandas as pd
 import os
-import base64
-from PIL import Image
-import io
 
 # 1. 웹 페이지 기본 설정
 st.set_page_config(
@@ -12,39 +9,14 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 로고 이미지를 안전하게 불러오는 함수 ---
-def get_image_html():
-    # 파일 이름 후보들을 순서대로 찾습니다.
-    logo_path = None
-    files = ['logo.png', 'logo.jpg', 'logo.jpeg', 'logo.PNG', 'logo.JPG']
-    for file_name in files:
-        if os.path.exists(file_name):
-            logo_path = file_name
-            break
-
-    if logo_path:
-        try:
-            img = Image.open(logo_path)
-            buffered = io.BytesIO()
-            img.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-            # 로고 크기를 적절하게 조절했습니다.
-            return f'<img src="data:image/png;base64,{img_str}" style="height: 60px; margin-right: 15px;">'
-        except Exception:
-            return ""
-    return ""
-
-# 2. 헤더 디자인 (글자 크기를 줄이고 로고와 나란히 배치)
-img_html = get_image_html()
-
-st.markdown(f"""
-<div style='display: flex; align-items: center; justify-content: center; padding: 20px 0 10px 0;'>
-{img_html}
-<h1 style='color: #1E3A8A; font-size: 1.6rem; margin: 0; white-space: nowrap;'>양명여고 진로진학부</h1>
+# 2. 헤더 디자인 (깨지지 않는 이모지 🏫 사용)
+st.markdown("""
+<div style='text-align: center; padding: 20px 0 10px 0;'>
+    <h1 style='color: #1E3A8A; font-size: 2.5rem; margin: 0; white-space: nowrap;'>🏫 양명여고 진로진학부</h1>
 </div>
 <div style='text-align: center; padding-bottom: 20px;'>
-<h2 style='color: #333; font-size: 1.2rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
-<p style='color: #666; font-size: 0.9rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
+    <h2 style='color: #333; font-size: 1.3rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
+    <p style='color: #666; font-size: 0.95rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -93,7 +65,7 @@ df = load_data()
 # 4. 검색 화면 구성
 if not df.empty:
     with st.form("search_form"):
-        st.markdown("### 🔍 검색 조건을 입력하세요")
+        st.markdown("### 🔍 어디를 찾으시나요?")
         col1, col2 = st.columns(2)
         with col1:
             u_keyword = st.text_input("🏫 대학 이름", placeholder="예: 서울대")
@@ -115,18 +87,8 @@ if not df.empty:
                 st.success(f"✅ 총 **{len(result)}건**의 결과를 찾았습니다.")
                 for _, row in result.iterrows():
                     with st.expander(f"🏫 [{row['대학명']}] {row['모집단위'].strip()}", expanded=True):
-                        st.markdown(f"**📌 핵심과목:** {row['핵심과목']}")
-                        st.markdown(f"**💡 권장과목:** {row['권장과목']}")
-                        if row['비고'] and row['비고'] != '-':
-                            st.markdown(f"**📝 비고:** {row['비고']}")
-        else:
-            st.info("💡 대학이나 학과 중 하나라도 입력해 주세요.")
-else:
-    st.info("검색을 시작하려면 정보를 입력해 주세요.")
-
-st.markdown("""
-    <br><br><hr>
-    <div style='text-align: center; color: gray; font-size: 0.8rem;'>
-        © 2026 양명여자고등학교 진로진학부 | 꿈과 미래를 잇는 통로
-    </div>
-""", unsafe_allow_html=True)
+                        if row['핵심과목'] and row['핵심과목'] != '-': 
+                            st.markdown(f"**📌 핵심과목:** {row['핵심과목']}")
+                        if row['권장과목'] and row['권장과목'] != '-': 
+                            st.markdown(f"**💡 권장과목:** {row['권장과목']}")
+                        if row['비고'] and row['비고'] !=
