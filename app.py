@@ -3,41 +3,62 @@ import pandas as pd
 import os
 import base64
 
-# 1. 웹 페이지 설정
+# 1. 웹 페이지 설정 (기본 유지)
 st.set_page_config(
     page_title="2028 대학별 권장과목 검색기",
     page_icon="🎓",
     layout="centered"
 )
 
-# --- 이미지 파일을 읽어서 HTML에 넣을 수 있게 변환하는 함수 ---
+# --- 배경 이미지를 위해 파일을 읽고 변환하는 함수 (PNG 권장) ---
 def get_image_base64(file_path):
     with open(file_path, "rb") as image_file:
         encoded = base64.b64encode(image_file.read()).decode()
     return encoded
 
-# 2. 헤더 디자인 (로고와 제목을 나란히 배치)
-logo_path = 'logo.jpg' if os.path.exists('logo.jpg') else 'logo.png'
-img_html = ""
+# 🌟 새로운 배경화면 & 제목 디자인 로직
+# 투명 배경을 위해 PNG 형식을 강력히 권장합니다.
+bg_logo_path = 'logo.png' if os.path.exists('logo.png') else 'logo.jpg'
 
-# 로고 파일이 서버에 있으면 불러오기
-if os.path.exists(logo_path):
-    img_base64 = get_image_base64(logo_path)
-    img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="height: 60px; margin-right: 15px;">'
+if os.path.exists(bg_logo_path):
+    try:
+        img_base64 = get_image_base64(bg_logo_path)
+        # 로고를 연하게 바탕에 까는 CSS (opacity를 0.1로 아주 낮춰서 워터마크 효과를 줍니다)
+        bg_css = f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("data:image/png;base64,{img_base64}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.12; /* 연하게 깔리도록 설정 */
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 배경 이미지가 클릭되지 않게 설정 */
+        }}
+        </style>
+        """
+        st.markdown(bg_css, unsafe_allow_html=True)
+    except Exception as e:
+        # 이미지가 있어도 오류가 나면 텍스트만 뜨게 처리
+        st.error(f"배경 이미지를 설정하는 중 오류 발생: {e}")
 
-# 핵심 수정: 코드 앞의 들여쓰기를 모두 없애서 코드가 노출되지 않고 디자인으로 적용되게 합니다.
+# 2. 헤더 디자인 (요청하신 대로 이모지와 제목을 나란히 배치)
+# white-space: nowrap으로 한 줄로 딱 붙게 만듭니다.
 st.markdown(f"""
-<div style='display: flex; align-items: center; justify-content: center; padding: 20px 0 10px 0;'>
-{img_html}
-<h1 style='color: #1E3A8A; font-size: 2.8rem; margin: 0; white-space: nowrap;'>양명여고 진로진학부</h1>
-</div>
-<div style='text-align: center; padding-bottom: 20px;'>
-<h2 style='color: #333; font-size: 1.5rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
-<p style='color: #666; font-size: 1.0rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
-</div>
+    <div style='text-align: center; padding: 20px 0 10px 0;'>
+        <h1 style='color: #1E3A8A; font-size: 2.8rem; margin: 0; white-space: nowrap;'>
+            🏫 양명여고 진로진학부
+        </h1>
+    </div>
+    <div style='text-align: center; padding-bottom: 20px;'>
+        <h2 style='color: #333; font-size: 1.5rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
+        <p style='color: #666; font-size: 1.0rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
+    </div>
 """, unsafe_allow_html=True)
 
-# 3. 데이터 로드 함수
+# 3. 데이터 로드 함수 (이전과 동일)
 @st.cache_data
 def load_data():
     file_path = 'data.csv' if os.path.exists('data.csv') else 'data.xlsx'
@@ -76,7 +97,7 @@ def load_data():
 
 df = load_data()
 
-# 4. 검색 창 및 버튼 디자인
+# 4. 검색 창 및 버튼 디자인 (이전과 동일)
 with st.form("search_form"):
     st.markdown("### 🔍 어디를 찾으시나요?")
     col1, col2 = st.columns(2)
@@ -88,7 +109,7 @@ with st.form("search_form"):
     
     submit_button = st.form_submit_button("🔍 검색하기", use_container_width=True)
 
-# 5. 검색 로직 실행
+# 5. 검색 로직 실행 (이전과 동일)
 if submit_button:
     if u_keyword or d_keyword:
         result = df.copy()
@@ -114,7 +135,7 @@ if submit_button:
 else:
     st.info("찾으시는 대학이나 학과를 입력하고 검색 버튼을 눌러주세요.")
 
-# 6. 하단 푸터
+# 6. 하단 푸터 (이전과 동일)
 st.markdown("""
     <br><br><hr>
     <div style='text-align: center; color: gray; font-size: 0.9rem;'>
