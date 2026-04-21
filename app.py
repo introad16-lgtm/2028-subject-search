@@ -23,19 +23,18 @@ img_html = ""
 # 로고 파일이 서버에 있으면 불러오기
 if os.path.exists(logo_path):
     img_base64 = get_image_base64(logo_path)
-    # 이미지 높이를 60px로 고정하고 오른쪽에 여백(15px)을 줍니다.
     img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="height: 60px; margin-right: 15px;">'
 
-# Flexbox를 사용해 이미지와 글자를 완벽하게 가로로 중앙 정렬 (white-space: nowrap 으로 줄바꿈 방지)
+# 핵심 수정: 코드 앞의 들여쓰기를 모두 없애서 코드가 노출되지 않고 디자인으로 적용되게 합니다.
 st.markdown(f"""
-    <div style='display: flex; align-items: center; justify-content: center; padding: 20px 0 10px 0;'>
-        {img_html}
-        <h1 style='color: #1E3A8A; font-size: 2.8rem; margin: 0; white-space: nowrap;'>양명여고 진로진학부</h1>
-    </div>
-    <div style='text-align: center; padding-bottom: 20px;'>
-        <h2 style='color: #333; font-size: 1.5rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
-        <p style='color: #666; font-size: 1.0rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
-    </div>
+<div style='display: flex; align-items: center; justify-content: center; padding: 20px 0 10px 0;'>
+{img_html}
+<h1 style='color: #1E3A8A; font-size: 2.8rem; margin: 0; white-space: nowrap;'>양명여고 진로진학부</h1>
+</div>
+<div style='text-align: center; padding-bottom: 20px;'>
+<h2 style='color: #333; font-size: 1.5rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
+<p style='color: #666; font-size: 1.0rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
+</div>
 """, unsafe_allow_html=True)
 
 # 3. 데이터 로드 함수
