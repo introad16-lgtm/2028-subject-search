@@ -12,10 +12,10 @@ st.set_page_config(
 # 2. 헤더 디자인 (깨지지 않는 이모지 🏫 사용)
 st.markdown("""
 <div style='text-align: center; padding: 20px 0 10px 0;'>
-    <h1 style='color: #1E3A8A; font-size: 2.1rem; margin: 0;'>🏫 양명여고 진로진학부</h1>
+    <h2 style='color: #1E3A8A; font-size: 2.1rem; margin: 0;'>🏫 양명여고 진로진학부</h2>
 </div>
 <div style='text-align: center; padding-bottom: 20px;'>
-    <h2 style='color: #333; font-size: 2.3rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h2>
+    <h1 style='color: #333; font-size: 2.3rem; margin-top: 10px;'>2028학년도 대학별 권장과목 검색기</h1>
     <p style='color: #666; font-size: 0.95rem;'>원하는 대학이나 학과를 입력하고 <b>'검색하기'</b> 버튼을 눌러주세요.</p>
 </div>
 """, unsafe_allow_html=True)
