@@ -9,62 +9,86 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 🎨 디자인 업그레이드 (CSS 마법) ---
+# --- 🎨 핑크 & 옐로우 공주풍 디자인 업그레이드 (CSS) ---
 st.markdown("""
 <style>
-    /* 1. 검색 버튼을 입체적이고 예쁜 파란색 그라데이션으로 변경 */
+    /* 전체 배경색을 아주 연한 베이비 핑크로 설정 */
+    .stApp {
+        background-color: #FFF5F7;
+    }
+
+    /* 1. 검색 버튼을 화사한 비비드 핑크 그라데이션으로 변경 */
     .stButton > button {
-        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: 20px; /* 더 둥글게 */
         font-weight: bold;
         font-size: 1.1rem;
-        box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3);
+        box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
         transition: all 0.3s ease;
+        padding: 10px 20px;
     }
     
-    /* 버튼에 마우스를 올렸을 때 살짝 떠오르는 효과 */
+    /* 버튼 호버 효과: 노란색 광채 */
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(30, 58, 138, 0.4);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
         color: white;
+        background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
     }
 
-    /* 2. 검색창(Form) 배경을 둥글고 부드러운 카드 형태로 변경 */
+    /* 2. 검색창(Form)을 연한 노란색 카드로 변경 */
     [data-testid="stForm"] {
-        border-radius: 15px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        background-color: #FEFFED; /* 연한 노란색 배경 */
+        border-radius: 20px;
+        border: 2px solid #FFD700; /* 금색/노란색 테두리 */
+        box-shadow: 0 10px 30px rgba(255, 105, 180, 0.1);
         padding: 30px;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
 
-    /* 3. 입력칸(텍스트 박스) 디자인 다듬기 */
+    /* 3. 입력칸(텍스트 박스) 디자인: 핑크색 포커스 */
     div[data-baseweb="input"] > div {
-        border-radius: 8px;
-        background-color: #F8FAFC;
+        border-radius: 10px;
+        background-color: white;
+        border: 1px solid #FFC0CB;
+    }
+    
+    div[data-baseweb="input"] > div:focus-within {
+        border-color: #FF1493;
+        box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.2);
     }
 
-    /* 4. 결과 창(Expander)을 예쁜 카드처럼 분리 */
+    /* 4. 결과 창(Expander) 디자인 */
     [data-testid="stExpander"] {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #FFE4E1;
+        margin-bottom: 15px;
+    }
+    
+    [data-testid="stExpander"] summary:hover {
+        color: #FF1493;
+    }
+
+    /* 성과 알림(Success) 칸 색상 조정 */
+    div[data-testid="stNotification"] {
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        border: 1px solid #F1F5F9;
-        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. 헤더 디자인 (여백과 비율을 더 보기 좋게 다듬음)
+# 2. 헤더 디자인 (핑크 & 옐로우 테마)
 st.markdown("""
 <div style='text-align: center; padding: 30px 0 15px 0;'>
-    <div style='font-size: 3rem; margin-bottom: 10px;'>🏫</div>
-    <h1 style='color: #1E3A8A; font-size: 2.2rem; margin: 0; font-weight: 800;'>양명여고 진로진학부</h1>
+    <div style='font-size: 3rem; margin-bottom: 10px;'>💖🏫💛</div>
+    <h1 style='color: #FF1493; font-size: 2.3rem; margin: 0; font-weight: 900; text-shadow: 2px 2px 0px #FFD70033;'>양명여고 진로진학부</h1>
 </div>
 <div style='text-align: center; padding-bottom: 30px;'>
-    <h2 style='color: #333; font-size: 1.3rem; margin-top: 5px; font-weight: 600;'>2028학년도 대학별 권장과목 검색기</h2>
-    <p style='color: #64748B; font-size: 1rem; margin-top: 10px;'>원하는 대학이나 학과를 입력하고 <b style='color: #1E3A8A;'>검색하기</b> 버튼을 눌러주세요.</p>
+    <h2 style='color: #333; font-size: 1.4rem; margin-top: 5px; font-weight: 700;'>🎓 2028학년도 대학별 권장과목 검색기</h2>
+    <p style='color: #64748B; font-size: 1.05rem; margin-top: 12px;'>원하는 대학이나 학과를 입력하고 <b style='color: #FF1493; background-color: #FFD70033; padding: 2px 5px; border-radius: 5px;'>검색하기</b> 버튼을 눌러주세요.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -113,15 +137,16 @@ df = load_data()
 # 4. 검색 화면 구성
 if not df.empty:
     with st.form("search_form"):
-        st.markdown("<h3 style='color: #1E293B; font-size: 1.2rem; margin-bottom: 15px;'>🔍 어디를 찾으시나요?</h3>", unsafe_allow_html=True)
+        # 검색창 제목을 핑크색으로
+        st.markdown("<h3 style='color: #FF1493; font-size: 1.3rem; margin-bottom: 18px; font-weight: 700;'>🔍 어디를 찾으시나요?</h3>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            u_keyword = st.text_input("🏫 대학 이름", placeholder="예: 서울대, 고려대")
+            u_keyword = st.text_input("💖 대학 이름", placeholder="예: 서울대, 연세대")
         with col2:
-            d_keyword = st.text_input("📚 학과/모집단위", placeholder="예: 컴퓨터, 경영, 의예")
+            d_keyword = st.text_input("💛 학과/모집단위", placeholder="예: 컴퓨터, 디자인, 간호")
         
-        st.write("") # 버튼 위아래 여백 조금 추가
-        submit_button = st.form_submit_button("🔍 검색하기", use_container_width=True)
+        st.write("") 
+        submit_button = st.form_submit_button("💖 검색하기 💛", use_container_width=True)
 
     if submit_button:
         if u_keyword or d_keyword:
@@ -140,11 +165,14 @@ if not df.empty:
                 st.success(f"✅ 총 **{len(result)}건**의 결과를 찾았습니다.")
                 for _, row in result.iterrows():
                     dept_name = row['모집단위'].strip()
+                    # 결과창 제목 호버시 핑크색으로 변함
                     with st.expander(f"🏫 [{row['대학명']}] {dept_name}", expanded=True):
                         if row['핵심과목'] and row['핵심과목'] != '-': 
-                            st.markdown(f"**📌 핵심과목:** <span style='color: #D97706; font-weight: bold;'>{row['핵심과목']}</span>", unsafe_allow_html=True)
+                            # 핵심과목은 핫핑크로 강조
+                            st.markdown(f"**📌 핵심과목:** <span style='color: #FF1493; font-weight: bold;'>{row['핵심과목']}</span>", unsafe_allow_html=True)
                         if row['권장과목'] and row['권장과목'] != '-': 
-                            st.markdown(f"**💡 권장과목:** <span style='color: #059669; font-weight: bold;'>{row['권장과목']}</span>", unsafe_allow_html=True)
+                            # 권장과목은 진한 노란색/골드로 강조 (가독성 위해)
+                            st.markdown(f"**💡 권장과목:** <span style='color: #CA8A04; font-weight: bold;'>{row['권장과목']}</span>", unsafe_allow_html=True)
                         
                         has_note = row['비고']
                         note_valid = row['비고'] != '-'
@@ -155,11 +183,11 @@ if not df.empty:
 else:
     st.info("데이터를 불러오는 중이거나 파일이 없습니다.")
 
-# 5. 하단 푸터
+# 5. 하단 푸터 (핑크색 테마)
 st.markdown("""
     <br><br><br>
-    <div style='text-align: center; color: #94A3B8; font-size: 0.85rem; border-top: 1px solid #E2E8F0; padding-top: 20px;'>
-        © 2026 양명여자고등학교 진로진학부<br>
-        <span style='font-size: 0.75rem;'>꿈과 미래를 잇는 통로</span>
+    <div style='text-align: center; color: #DB2777; font-size: 0.9rem; border-top: 2px solid #FFC0CB; padding-top: 20px; background-color: #FFF0F5; padding-bottom: 20px; border-radius: 15px 15px 0 0;'>
+        © 2026 양명여자고등학교 진로진학부 💖<br>
+        <span style='font-size: 0.8rem; color: #CA8A04; font-weight: 600;'>꿈과 미래를 잇는 상큼한 통로 💛</span>
     </div>
 """, unsafe_allow_html=True)
