@@ -87,7 +87,7 @@ st.markdown("""
     <h1 style='color: #FF1493; font-size: 2.3rem; margin: 0; font-weight: 900; text-shadow: 2px 2px 0px #FFD70033;'>양명여고 진로진학부</h1>
 </div>
 <div style='text-align: center; padding-bottom: 30px;'>
-    <h2 style='color: #333; font-size: 1.4rem; margin-top: 5px; font-weight: 700;'>🎓 2028학년도 대학별 권장과목 검색기</h2>
+    <h2 style='color: #333; font-size: 1.9rem; margin-top: 5px; font-weight: 700;'>🎓 2028학년도 대학별 권장과목 검색기</h2>
     <p style='color: #64748B; font-size: 1.05rem; margin-top: 12px;'>원하는 대학이나 학과를 입력하고 <b style='color: #FF1493; background-color: #FFD70033; padding: 2px 5px; border-radius: 5px;'>검색하기</b> 버튼을 눌러주세요.</p>
 </div>
 """, unsafe_allow_html=True)
