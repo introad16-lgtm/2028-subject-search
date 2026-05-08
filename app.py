@@ -327,9 +327,9 @@ elif menu == "🎯 생기부 핀셋 설계 시스템":
         <div id="app-view" class="p-4 md:p-8 max-w-6xl mx-auto block print:hidden">
             <header class="text-center mb-8 mt-2">
                 <div class="inline-flex items-center gap-2 px-5 py-2 mb-4 text-sm font-bold text-pink-700 bg-pink-50 border border-pink-200 rounded-full">
-                    🎯 다변화 학과 & 핀셋 교과 연계 시스템
+                    🎯 다변화 학과 & 핀셋 교과 연계 시스템(공사중)
                 </div>
-                <h1 class="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">생기부 <span class="gradient-text">장바구니 & 자동 설계기</span></h1>
+                <h1 class="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">학생 활동 <span class="gradient-text">자동 설계기</span></h1>
                 <p class="text-[16px] text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
                     학생 주도성이 높은 활동은 전공 뼈대로 밀고 가며,<br><b>가변적인 특강/실습에만 텍스트 엔진이 개입하여 깊이 있는 교과 연계를 제안</b>합니다.
                 </p>
