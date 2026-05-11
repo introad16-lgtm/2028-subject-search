@@ -68,15 +68,17 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 학과 및 활동 분류 데이터
+# -------------------------------------------------------------
+# [데이터 세팅] 학과 대폭 확장 및 "학과 미정" 추가
+# -------------------------------------------------------------
 career_data = {
-    "인문계열": ["국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과"],
-    "사회계열": ["경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과"],
-    "교육계열": ["초등교육과", "국어교육과", "수학교육과", "영어교육과", "유아교육과", "특수교육과"],
-    "공학계열": ["컴퓨터공학과", "인공지능(AI)학과", "기계공학과", "전기전자공학과", "화학공학과", "건축학과"],
-    "자연계열": ["수학과", "물리학과", "화학과", "생명과학과", "환경학과"],
-    "의약계열": ["의예과", "치의예과", "한의예과", "약학과", "간호학과", "수의예과"],
-    "예체능계열": ["디자인학과", "회화과", "음악학과", "체육학과", "연극영화과"]
+    "인문계열": ["계열 전반 (특정 학과 미정)", "국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과", "중어중문학과", "일어일문학과", "불어불문학과", "노어노문학과", "언어학과", "문헌정보학과", "문화인류학과"],
+    "사회계열": ["계열 전반 (특정 학과 미정)", "경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과", "국제통상학과", "회계학과", "관광경영학과", "사회학과", "도시행정학과"],
+    "교육계열": ["계열 전반 (특정 학과 미정)", "초등교육과", "국어교육과", "수학교육과", "영어교육과", "유아교육과", "특수교육과", "교육학과", "역사교육과", "지리교육과", "윤리교육과", "체육교육과"],
+    "공학계열": ["계열 전반 (특정 학과 미정)", "컴퓨터공학과", "인공지능(AI)학과", "기계공학과", "전기전자공학과", "화학공학과", "건축학과", "신소재공학과", "산업공학과", "생명공학과", "소프트웨어공학과", "정보통신공학과", "항공우주공학과"],
+    "자연계열": ["계열 전반 (특정 학과 미정)", "수학과", "물리학과", "화학과", "생명과학과", "환경과학과", "통계학과", "지구환경과학과", "천문우주학과", "해양학과"],
+    "의약계열": ["계열 전반 (특정 학과 미정)", "의예과", "치의예과", "한의예과", "약학과", "간호학과", "수의예과", "보건행정학과", "물리치료학과", "임상병리학과", "방사선학과", "치위생학과"],
+    "예체능계열": ["계열 전반 (특정 학과 미정)", "디자인학과", "회화과", "음악학과", "체육학과", "연극영화과", "무용과", "애니메이션학과", "실용음악과", "패션디자인학과", "시각디자인학과"]
 }
 
 activities_db = {
@@ -103,13 +105,35 @@ st.markdown("<h3 style='color: #FF1493; margin-bottom: 20px; border-bottom: 2px 
 
 col1, col2 = st.columns(2)
 with col1: selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
-with col2: selected_major = st.selectbox("🎓 세부 학과", career_data[selected_track])
+with col2: selected_major = st.selectbox("🎓 세부 학과 (미정일 경우 '계열 전반' 선택)", career_data[selected_track])
 
-st.markdown("<h3 style='color: #FF1493; margin-top: 30px; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🎯 STEP 2. 전공 맞춤 추천 활동 선택</h3>", unsafe_allow_html=True)
-st.info(f"💡 **{selected_major}** 진학을 목표로 하는 학생들에게 아래 활동들을 추천합니다. 하나를 선택해 보세요!")
+# 선택한 학과에 맞춰 텍스트 변환 (학과 미정 처리)
+target_name = selected_major if selected_major != "계열 전반 (특정 학과 미정)" else f"{selected_track} 전반"
 
+st.markdown(f"<h3 style='color: #FF1493; margin-top: 30px; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🎯 STEP 2. 활동 선택 (추천 및 기타 활동)</h3>", unsafe_allow_html=True)
+st.info(f"💡 **[{target_name}]** 진로에 맞춰 활동을 선택하세요. 추천 활동 외에 '다른 활동'을 골라도 AI가 맞춤형으로 가이드해 줍니다!")
+
+# 💡 추천 활동과 다른 활동을 구분해서 보여주기
 recs = recommended_activities[selected_track]
-selected_act = st.radio("추천 활동 목록", recs, label_visibility="collapsed")
+all_activities = list(activities_db.keys())
+
+display_options = []
+# 1. 전공 추천 활동 먼저 추가
+for act in recs:
+    display_options.append(f"🌟 [전공 추천] {act}")
+# 2. 다른 일반 활동 추가
+for act in all_activities:
+    if act not in recs:
+        display_options.append(f"▶ [다른 활동] {act}")
+
+selected_act_display = st.radio("활동 목록", display_options, label_visibility="collapsed")
+
+# 실제로 선택된 활동 이름만 추출
+if selected_act_display.startswith("🌟 [전공 추천] "):
+    selected_act = selected_act_display.replace("🌟 [전공 추천] ", "")
+else:
+    selected_act = selected_act_display.replace("▶ [다른 활동] ", "")
+
 act_type = activities_db.get(selected_act, "주도형")
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -142,61 +166,59 @@ if gemini_btn:
         if act_type == "주도형":
             prompt = f"""
             당신은 대한민국 최고 수준의 고등학교 진로진학 전문 교사입니다.
-            - 학생 희망 학과: {selected_major}
+            - 학생 진로/학과: {target_name}
             - 선택한 학교 활동: {selected_act} (학생 주도형 활동)
-            - 학생의 세부 관심사: {custom_title if custom_title else '학과 특성에 맞춰 자유롭게 제안'}
+            - 학생의 세부 관심사: {custom_title if custom_title else f'{target_name} 특성에 맞춰 자유롭게 제안'}
             
-            요청: 이 학생이 '{selected_major}' 진학을 위해 이 주도형 활동을 '어떻게 기획하고 실행하면 좋을지' 가이드라인을 제시해 주세요.
+            요청: 이 학생이 '{target_name}' 진로/진학을 위해 이 주도형 활동을 '어떻게 기획하고 실행하면 좋을지' 가이드라인을 제시해 주세요.
             단순히 주제만 던져주지 말고, 어떤 책/논문을 찾아보고, 어떤 방식으로 탐구 결과물을 낼지 구체적인 '행동 가이드'를 작성해야 합니다.
             
             아래 마크다운 양식에 맞춰 작성하세요:
-            ### 💡 1. [희망 학과] 맞춤형 탐구 주제 제안 (2가지)
+            ### 💡 1. [{target_name}] 맞춤형 탐구 주제 제안 (2가지)
             ### 📚 2. 탐구를 위한 구체적인 활동 전개 팁 (자료 조사 방법, 결과물 형태 등)
             ### 🎓 3. 생기부 과세특/창체 기록 예시안 (4~5줄)
             """
         else:
             prompt = f"""
             당신은 대한민국 최고 수준의 고등학교 진로진학 전문 교사입니다.
-            - 학생 희망 학과: {selected_major}
+            - 학생 진로/학과: {target_name}
             - 선택한 학교 활동: {selected_act} (비주도형/강의 청취형 활동)
             - 수강한 강의/특강 제목: {custom_title}
             
-            요청: 이 학생이 '{custom_title}'라는 수동적인 강의/특강을 들은 후, '{selected_major}' 전공과 연계하여 
+            요청: 이 학생이 '{custom_title}'라는 수동적인 강의/특강을 들은 후, '{target_name}' 전공과 연계하여 
             '어떤 심화 후속 활동'을 스스로 진행하면 생기부에 주도성을 어필할 수 있을지 가이드라인을 제시해 주세요.
             
             아래 마크다운 양식에 맞춰 작성하세요:
-            ### 🔍 1. 강의 내용과 [희망 학과]의 연결 고리
+            ### 🔍 1. 강의 내용과 [{target_name}]의 연결 고리
             ### 🏃‍♂️ 2. 주도성 어필을 위한 후속 심화 활동 가이드 (추가 독서, 소논문 등)
             ### 🎓 3. 생기부 과세특/창체 기록 예시안 (4~5줄)
             """
             
         try:
-            with st.spinner(f"🌐 제미나이 AI가 '{selected_major}' 전공에 맞춰 실시간으로 가이드를 생성 중입니다..."):
+            with st.spinner(f"🌐 제미나이 AI가 '{target_name}' 진로에 맞춰 실시간으로 가이드를 생성 중입니다..."):
                 genai.configure(api_key=api_key)
                 
-                # ✨ 궁극의 무적 로직: 사용 가능한 모델을 직접 물어보고 가장 좋은 것을 자동 선택합니다! ✨
+                # 가용 모델 자동 탐색 로직 (에러 원천 차단)
                 available_models = [m.name.replace("models/", "") for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                 
                 if not available_models:
-                    st.error("🚨 선생님의 API 키로 사용할 수 있는 제미나이 모델이 조회되지 않습니다. 구글 AI Studio에서 API 설정을 다시 확인해주세요.")
+                    st.error("🚨 사용할 수 있는 제미나이 모델이 조회되지 않습니다. 구글 AI Studio 설정을 확인해주세요.")
                 else:
-                    # 최우선 순위로 가장 최신/빠른 모델을 찾아냅니다. (이름이 바뀌어도 방어 가능)
-                    chosen_model = available_models[0] # 아무거나 되는 것 1개 기본 선택
+                    chosen_model = available_models[0]
                     for target in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"]:
                         if target in available_models:
                             chosen_model = target
                             break
                             
-                    # 시스템이 찾아낸 모델 이름으로 구동!
                     model = genai.GenerativeModel(chosen_model)
                     response = model.generate_content(prompt)
                     
-                    st.success(f"✅ 제미나이 AI (구동 모델: {chosen_model}) 가 맞춤형 설계를 완료했습니다!")
+                    st.success(f"✅ 제미나이 AI가 맞춤형 설계를 완료했습니다! (모델: {chosen_model})")
                     
                     st.markdown(f"""
                     <div style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
                         <h2 style="color: #CA8A04; margin-top: 0; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">
-                            🎯 {selected_major} 맞춤형 활동 솔루션
+                            🎯 {target_name} 맞춤형 활동 솔루션
                         </h2>
                         <div style="font-size: 1.1rem; line-height: 1.8; color: #333;">
                             {response.text}
