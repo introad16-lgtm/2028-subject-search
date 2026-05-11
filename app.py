@@ -3,34 +3,41 @@ import streamlit as st
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 진로진학 통합 시스템", page_icon="💖", layout="wide")
 
-# 2. 핑크/옐로우 테마 & ✨투명 유리 버튼 마법 CSS✨
+# 2. 핑크/옐로우 테마 & ✨고정 높이 투명 버튼 마법 CSS✨
 st.markdown("""
 <style>
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
-    /* 각 칸(컬럼)을 기준으로 겹치기 준비 */
+    /* 1. 컬럼을 겹치기 기준으로 설정 */
     div[data-testid="column"] {
         position: relative !important;
     }
     
-    /* ✨핵심✨ 진짜 클릭 버튼은 '완전 투명'하게 만들어서 디자인 위에 덮어씌우기 */
+    /* 2. ✨해결 핵심✨ 투명 버튼의 '높이'를 카드와 똑같이 220px로 강제 고정! */
     div.stButton {
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
-        height: 100% !important;
-        opacity: 0 !important; /* 투명하게 숨김! */
-        z-index: 999 !important; /* 제일 위로 끌어올림 */
+        height: 220px !important; /* 이 부분이 빠져서 그동안 눌리지 않았던 것입니다! */
+        z-index: 999 !important;
     }
     div.stButton > button {
         width: 100% !important;
-        height: 100% !important;
+        height: 220px !important; 
+        background-color: transparent !important; /* 완전 투명하게 */
+        border: none !important;
+        color: transparent !important;
         cursor: pointer !important;
+        box-shadow: none !important;
+    }
+    div.stButton > button:focus {
+        outline: none !important;
+        box-shadow: none !important;
     }
 
-    /* 디자인 박스에 마우스 올렸을 때 애니메이션 */
+    /* 3. 디자인 박스에 마우스 올렸을 때 애니메이션 */
     .my-card {
         transition: all 0.3s ease;
     }
@@ -61,7 +68,7 @@ st.markdown("""
 col1, col2, col3, col4 = st.columns([1, 4, 4, 1])
 
 with col2:
-    # 화면에 보이는 '완벽하고 큼직한 디자인 박스' (선생님이 원하셨던 그대로!)
+    # 화면에 보이는 '완벽하고 큼직한 디자인 박스'
     st.markdown("""
     <div class="my-card" style='background-color: white; border: 4px solid #FFD700; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
         <h3 style='color: #CA8A04; font-size: 2.2rem; margin: 0; font-weight: 900;'>🎓 권장과목 검색기</h3>
@@ -69,8 +76,8 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
     
-    # 기능만 담당하는 '보이지 않는 투명 버튼' (위의 박스를 덮고 있음)
-    if st.button("검색기 이동", key="btn1"):
+    # 기능만 담당하는 '보이지 않는 220px짜리 투명 버튼'
+    if st.button("검색기 이동", key="btn1", use_container_width=True):
         st.switch_page("pages/1_🎓_권장과목_검색기.py")
 
 with col3:
@@ -82,8 +89,8 @@ with col3:
     </div>
     """, unsafe_allow_html=True)
     
-    # 기능만 담당하는 '보이지 않는 투명 버튼'
-    if st.button("활동 안내 이동", key="btn2"):
+    # 기능만 담당하는 '보이지 않는 220px짜리 투명 버튼'
+    if st.button("활동 안내 이동", key="btn2", use_container_width=True):
         st.switch_page("pages/2_📋_학교_활동_프로그램_안내.py")
 
 st.sidebar.info("💖 화면 중앙의 박스를 직접 누르거나, 여기서 메뉴를 선택하세요!")
