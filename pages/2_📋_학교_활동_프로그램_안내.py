@@ -200,11 +200,21 @@ if gemini_btn:
             with st.spinner(f"🌐 제미나이 AI가 '{target_name}' 진로에 맞춰 실시간으로 가이드와 참고 문헌을 검색 중입니다..."):
                 genai.configure(api_key=api_key)
                 
-                # 💡 [핵심 최적화] 무거운 list_models() 호출을 없애고 가장 빠르고 할당량이 높은 flash 모델로 직행합니다!
-                model = genai.GenerativeModel("gemini-1.5-flash")
-                response = model.generate_content(prompt)
+                used_model = ""
+                # 💡 [안전망 추가] 최신 모델(flash) 시도 후, 404 에러 시 범용 모델(pro)로 자동 우회!
+                try:
+                    model = genai.GenerativeModel("gemini-1.5-flash")
+                    response = model.generate_content(prompt)
+                    used_model = "gemini-1.5-flash"
+                except Exception as inner_e:
+                    if "404" in str(inner_e):
+                        model = genai.GenerativeModel("gemini-pro")
+                        response = model.generate_content(prompt)
+                        used_model = "gemini-pro"
+                    else:
+                        raise inner_e # 429 과부하 에러 등은 바깥쪽으로 넘겨서 예쁜 안내문을 띄움
                 
-                st.success(f"✅ 제미나이 AI가 맞춤형 문헌 검색 및 설계를 완료했습니다! (모델: gemini-1.5-flash)")
+                st.success(f"✅ 제미나이 AI가 맞춤형 문헌 검색 및 설계를 완료했습니다! (모델: {used_model})")
                 
                 st.markdown(f"""
                 <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
@@ -233,6 +243,6 @@ if gemini_btn:
         except Exception as e:
             error_message = str(e)
             if "429" in error_message or "quota" in error_message.lower() or "ResourceExhausted" in error_message:
-                st.warning("⏳ **잠시만요!** 지금 선생님의 무료 일일 사용량이 모두 소진되었거나 접속이 몰렸습니다. 내일 다시 시도하시거나, 새 API 키를 발급받아 주세요! 💖")
+                st.warning("⏳ **잠시만요!** 지금 선생님의 일일 무료 사용량이 모두 소진되었거나 접속이 몰렸습니다. 새 API 키를 등록하시거나 잠시 후 다시 시도해 주세요! 💖")
             else:
                 st.error(f"🚨 통신 오류가 발생했습니다: {e}")
