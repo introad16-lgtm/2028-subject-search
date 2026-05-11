@@ -173,22 +173,36 @@ if gemini_btn:
         try:
             with st.spinner(f"🌐 제미나이 AI가 '{selected_major}' 전공에 맞춰 실시간으로 가이드를 생성 중입니다..."):
                 genai.configure(api_key=api_key)
-                # ✨ 에러를 100% 차단하는 안정적인 gemini-pro 모델 강제 고정 ✨
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content(prompt)
                 
-                st.success("✅ 제미나이 AI의 실시간 맞춤형 설계가 완료되었습니다!")
+                # ✨ 궁극의 무적 로직: 사용 가능한 모델을 직접 물어보고 가장 좋은 것을 자동 선택합니다! ✨
+                available_models = [m.name.replace("models/", "") for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                 
-                st.markdown(f"""
-                <div style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
-                    <h2 style="color: #CA8A04; margin-top: 0; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">
-                        🎯 {selected_major} 맞춤형 활동 솔루션
-                    </h2>
-                    <div style="font-size: 1.1rem; line-height: 1.8; color: #333;">
-                        {response.text}
+                if not available_models:
+                    st.error("🚨 선생님의 API 키로 사용할 수 있는 제미나이 모델이 조회되지 않습니다. 구글 AI Studio에서 API 설정을 다시 확인해주세요.")
+                else:
+                    # 최우선 순위로 가장 최신/빠른 모델을 찾아냅니다. (이름이 바뀌어도 방어 가능)
+                    chosen_model = available_models[0] # 아무거나 되는 것 1개 기본 선택
+                    for target in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"]:
+                        if target in available_models:
+                            chosen_model = target
+                            break
+                            
+                    # 시스템이 찾아낸 모델 이름으로 구동!
+                    model = genai.GenerativeModel(chosen_model)
+                    response = model.generate_content(prompt)
+                    
+                    st.success(f"✅ 제미나이 AI (구동 모델: {chosen_model}) 가 맞춤형 설계를 완료했습니다!")
+                    
+                    st.markdown(f"""
+                    <div style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
+                        <h2 style="color: #CA8A04; margin-top: 0; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">
+                            🎯 {selected_major} 맞춤형 활동 솔루션
+                        </h2>
+                        <div style="font-size: 1.1rem; line-height: 1.8; color: #333;">
+                            {response.text}
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
                 
         except Exception as e:
             st.error(f"🚨 제미나이 통신 중 오류가 발생했습니다. (에러 내용: {e})")
