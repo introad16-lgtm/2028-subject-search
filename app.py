@@ -3,25 +3,28 @@ import streamlit as st
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 진로진학 통합 시스템", page_icon="💖", layout="wide")
 
-# 2. 핑크/옐로우 테마 & ✨고정 높이 투명 버튼 마법 CSS✨
+# 2. 핑크/옐로우 테마 및 ✨고정 높이 투명 유리 버튼 마법 CSS✨
 st.markdown("""
 <style>
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
-    /* 1. 컬럼을 겹치기 기준으로 설정 */
+    /* 링크 밑줄 없애고 글자 색상 유지 */
+    a { text-decoration: none; color: inherit; display: block; height: 100%; }
+
+    /* 컬럼을 겹치기 기준으로 설정 */
     div[data-testid="column"] {
         position: relative !important;
     }
     
-    /* 2. ✨해결 핵심✨ 투명 버튼의 '높이'를 카드와 똑같이 220px로 강제 고정! */
+    /* ✨해결 핵심✨ 디자인 박스 위에 완벽하게 덮이는 고정 높이 투명 유리 버튼 만들기 */
     div.stButton {
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
-        height: 220px !important; /* 이 부분이 빠져서 그동안 눌리지 않았던 것입니다! */
-        z-index: 999 !important;
+        height: 220px !important; /* 디자인 박스 높이와 똑같이 220px로 강제 고정! */
+        z-index: 999 !important; /* 제일 위로 끌어올림 */
     }
     div.stButton > button {
         width: 100% !important;
@@ -37,7 +40,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* 3. 디자인 박스에 마우스 올렸을 때 애니메이션 */
+    /* 디자인 박스에 마우스 올렸을 때 애니메이션 */
     .my-card {
         transition: all 0.3s ease;
     }
@@ -64,32 +67,36 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. 완벽한 디자인 + 보이지 않는 투명 버튼 레이아웃
+# 4. 완벽한 디자인 + 보이지 않는 투명 유리 버튼 레이아웃
 col1, col2, col3, col4 = st.columns([1, 4, 4, 1])
 
 with col2:
-    # 화면에 보이는 '완벽하고 큼직한 디자인 박스'
+    # <a> 태그로 감싸서 링크 기능 추가 + 화면에 보이는 '완벽하고 큼직한 디자인 박스' (선생님이 원하셨던 그대로!)
     st.markdown("""
-    <div class="my-card" style='background-color: white; border: 4px solid #FFD700; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
-        <h3 style='color: #CA8A04; font-size: 2.2rem; margin: 0; font-weight: 900;'>🎓 권장과목 검색기</h3>
-        <p style='color: #64748B; font-size: 1.1rem; margin-top: 15px; font-weight: 600;'>2028학년도 대학별 필수 과목을<br>빠르게 검색합니다.</p>
-    </div>
+    <a href="./1_%🎓_%권장과목_검색기">
+        <div class="my-card" style='background-color: white; border: 4px solid #FFD700; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
+            <h3 style='color: #CA8A04; font-size: 2.2rem; margin: 0; font-weight: 900;'>🎓 권장과목 검색기</h3>
+            <p style='color: #64748B; font-size: 1.1rem; margin-top: 15px; font-weight: 600;'>2028학년도 대학별 필수 과목을<br>빠르게 검색합니다.</p>
+        </div>
+    </a>
     """, unsafe_allow_html=True)
     
-    # 기능만 담당하는 '보이지 않는 220px짜리 투명 버튼'
+    # 기능만 담당하는 '보이지 않는 220px짜리 투명 유리 버튼'
     if st.button("검색기 이동", key="btn1", use_container_width=True):
         st.switch_page("pages/1_🎓_권장과목_검색기.py")
 
 with col3:
-    # 화면에 보이는 '완벽하고 큼직한 디자인 박스'
+    # <a> 태그로 감싸서 링크 기능 추가 + 화면에 보이는 '완벽하고 큼직한 디자인 박스'
     st.markdown("""
-    <div class="my-card" style='background-color: white; border: 4px solid #FF1493; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
-        <h3 style='color: #FF1493; font-size: 2.2rem; margin: 0; font-weight: 900;'>📋 학교 활동 프로그램 안내</h3>
-        <p style='color: #64748B; font-size: 1.1rem; margin-top: 15px; font-weight: 600;'>제미나이 AI가 전공 맞춤형 세특을<br>실시간으로 창작합니다.</p>
-    </div>
+    <a href="./2_%📋_%학교_활동_프로그램_안내">
+        <div class="my-card" style='background-color: white; border: 4px solid #FF1493; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
+            <h3 style='color: #FF1493; font-size: 2.2rem; margin: 0; font-weight: 900;'>📋 학교 활동 프로그램 안내</h3>
+            <p style='color: #64748B; font-size: 1.1rem; margin-top: 15px; font-weight: 600;'>제미나이 AI가 전공 맞춤형 세특을<br>실시간으로 창작합니다.</p>
+        </div>
+    </a>
     """, unsafe_allow_html=True)
     
-    # 기능만 담당하는 '보이지 않는 220px짜리 투명 버튼'
+    # 기능만 담당하는 '보이지 않는 220px짜리 투명 유리 버튼'
     if st.button("활동 안내 이동", key="btn2", use_container_width=True):
         st.switch_page("pages/2_📋_학교_활동_프로그램_안내.py")
 
