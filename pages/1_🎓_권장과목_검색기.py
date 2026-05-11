@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import os
 
+# 1. 페이지 설정 및 배경
 st.set_page_config(page_title="2028 권장과목 검색", page_icon="🎓", layout="wide")
 
-# 핑크 & 옐로우 배경
 st.markdown("<style>.stApp { background-color: #FFF5F7; }</style>", unsafe_allow_html=True)
 
+# 2. 헤더 디자인
 st.markdown("""
 <div style='text-align: center; padding-bottom: 30px;'>
     <h1 style='color: #FF1493; font-weight: 900;'>🎓 2028 대학별 권장과목 검색</h1>
@@ -14,38 +15,44 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 데이터 불러오기 함수 (dada.xlsl 및 상위 폴더 탐색 기능 추가)
+# 3. 똑똑한 데이터 로더 (data.xlsx 전용)
 @st.cache_data
 def load_data():
-    # 💡 핵심: 파일명이 dada.xlsl 또는 dada.xlsx인 것을 상위 폴더('../')까지 모두 뒤져서 찾습니다!
+    # 찾을 파일 후보군 (상위 폴더 포함)
+    target_filename = "data.xlsx"
     possible_paths = [
-        'dada.xlsx', '../dada.xlsx', 
-        'dada.xlsl', '../dada.xlsl',
-        'data.csv', '../data.csv'
+        target_filename,                # 현재 폴더 (pages/)
+        f"../{target_filename}",        # 상위 폴더 (루트)
+        target_filename.lower(),        # 소문자 버전
+        f"../{target_filename.lower()}" # 상위 폴더 소문자 버전
     ]
-    file_path = None
     
+    file_path = None
     for path in possible_paths:
         if os.path.exists(path):
             file_path = path
             break
             
     if not file_path:
-        return pd.DataFrame() # 파일이 없으면 빈 데이터프레임 반환
+        st.error(f"🚨 '{target_filename}' 파일을 찾을 수 없습니다!")
+        # 깃허브에 실제 어떤 파일이 있는지 확인해주는 안내 (선생님 확인용)
+        current_files = os.listdir('.')
+        parent_files = os.listdir('..') if os.path.exists('..') else []
+        st.info(f"📁 현재 위치 파일: {', '.join(current_files)}")
+        st.info(f"📁 상위 폴더 파일: {', '.join(parent_files)}")
+        return pd.DataFrame()
         
     try:
-        if file_path.endswith('.csv'):
-            try: df = pd.read_csv(file_path, skiprows=2, encoding='utf-8')
-            except: df = pd.read_csv(file_path, skiprows=2, encoding='cp949')
-        else: 
-            # 엑셀 파일 읽기 (dada.xlsl 포함)
-            df = pd.read_excel(file_path, skiprows=2)
+        # 엑셀 파일 읽기 (skiprows=2는 선생님의 데이터 양식에 맞춘 설정입니다)
+        df = pd.read_excel(file_path, skiprows=2, engine='openpyxl')
         
+        # 열 이름 정리 (기존 로직 유지)
         df['대학명'] = df.iloc[:, 2].fillna('').astype(str)
         df['모집단위'] = df.iloc[:, 3].fillna('').astype(str) + " " + df.iloc[:, 4].fillna('').astype(str)
         df['핵심과목'] = df.iloc[:, 5].fillna('-').astype(str)
         df['권장과목'] = df.iloc[:, 6].fillna('-').astype(str) if len(df.columns) > 6 else '-'
         df['비고'] = df.iloc[:, 7].fillna('-').astype(str) if len(df.columns) > 7 else '-'
+        
         return df.replace('nan', '', regex=True).drop_duplicates(subset=['대학명', '모집단위', '핵심과목', '권장과목'])
     except Exception as e:
         st.error(f"파일을 읽는 중 오류가 발생했습니다: {e}")
@@ -53,7 +60,7 @@ def load_data():
 
 df = load_data()
 
-# 검색 화면 구성
+# 4. 검색 화면 구성
 if not df.empty:
     with st.form("search_form"):
         col1, col2 = st.columns(2)
@@ -62,7 +69,7 @@ if not df.empty:
         
         st.write("") 
         
-        # 버튼 디자인
+        # 버튼 디자인 (핑크 테마)
         st.markdown("""
         <style>
             .stButton > button {
@@ -93,5 +100,3 @@ if not df.empty:
                     if row['핵심과목'] != '-': st.markdown(f"**📌 핵심과목:** <span style='color: #FF1493; font-weight: bold;'>{row['핵심과목']}</span>", unsafe_allow_html=True)
                     if row['권장과목'] != '-': st.markdown(f"**💡 권장과목:** <span style='color: #CA8A04; font-weight: bold;'>{row['권장과목']}</span>", unsafe_allow_html=True)
                     if row['비고'] != '-': st.markdown(f"**📝 비고:** {row['비고']}")
-else:
-    st.error("🚨 깃허브에 'dada.xlsl' 또는 'dada.xlsx' 파일이 있는지 확인해주세요!")
