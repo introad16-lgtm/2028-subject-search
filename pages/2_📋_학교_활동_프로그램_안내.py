@@ -47,11 +47,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 사이드바 (API 키 입력 및 설정)
+# -------------------------------------------------------------
+# 💡 핵심: 스트림릿 비밀 금고(Secrets)에서 API 키 자동 불러오기
+# -------------------------------------------------------------
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+except:
+    api_key = None
+
+# 3. 사이드바 (입력창 삭제, 연결 상태만 표시)
 with st.sidebar:
-    st.markdown("### 🔑 제미나이 AI 설정")
-    st.info("이 프로그램은 실시간으로 AI를 구동합니다. 구글 Gemini API 키를 입력해 주세요.")
-    api_key = st.text_input("Gemini API Key 입력", type="password")
+    st.markdown("### 🤖 제미나이 AI 연결 상태")
+    if api_key:
+        st.success("✅ AI 서버에 정상적으로 연결되었습니다!")
+    else:
+        st.error("🚨 API 키가 설정되지 않았습니다. 관리자(선생님)의 설정이 필요합니다.")
     st.write("---")
     st.markdown("💖 **양명여자고등학교 진로진학부**")
 
@@ -82,7 +92,6 @@ career_data = {
     "예체능계열": ["디자인학과", "회화과", "음악학과", "체육학과", "연극영화과"]
 }
 
-# 양명여고 대표 활동 (주도형 / 비주도형 명확히 분류)
 activities_db = {
     "드림업 프로젝트": "주도형",
     "학생주도 프로젝트 봉사활동": "주도형",
@@ -98,7 +107,6 @@ activities_db = {
     "금융 리터러시 아카데미": "비주도형"
 }
 
-# 계열별 맞춤형 추천 활동 매핑
 recommended_activities = {
     "인문계열": ["드림업 프로젝트", "독서탐구", "이음 책모임", "전문직업인 초청 특강"],
     "사회계열": ["학생주도 프로젝트 봉사활동", "환경인문독서토론", "전문직업인 초청 특강", "금융 리터러시 아카데미"],
@@ -131,7 +139,7 @@ act_type = activities_db.get(selected_act, "주도형")
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# STEP 3. 활동 성격에 따른 동적 입력창 (주도형 vs 비주도형)
+# STEP 3. 활동 성격에 따른 동적 입력창
 # -------------------------------------------------------------
 st.markdown("<div class='styled-card'>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='color: #FF1493; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🔍 STEP 3. 세부 정보 입력 ({act_type})</h3>", unsafe_allow_html=True)
@@ -160,11 +168,10 @@ st.write("---")
 
 if gemini_btn:
     if not api_key:
-        st.error("🚨 화면 왼쪽 사이드바에 Gemini API Key를 먼저 입력해 주세요!")
+        st.error("🚨 제미나이 API 키가 시스템에 설정되어 있지 않습니다. 선생님께 문의하세요!")
     elif act_type == "비주도형" and not custom_title:
         st.warning("⚠️ 비주도형 활동의 경우, 후속 활동을 기획하기 위해 반드시 '강의 제목'을 입력해 주셔야 합니다.")
     else:
-        # 프롬프트 동적 생성 (핵심 로직)
         if act_type == "주도형":
             prompt = f"""
             당신은 대한민국 최고 수준의 고등학교 진로진학 전문 교사입니다.
@@ -217,4 +224,4 @@ if gemini_btn:
                 """, unsafe_allow_html=True)
                 
         except Exception as e:
-            st.error(f"🚨 제미나이 통신 중 오류가 발생했습니다. API 키가 정확한지 확인해 주세요. (에러 내용: {e})")
+            st.error(f"🚨 제미나이 통신 중 오류가 발생했습니다. (에러 내용: {e})")
