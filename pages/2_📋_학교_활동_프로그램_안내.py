@@ -1,13 +1,15 @@
 import streamlit as st
 import google.generativeai as genai
+import streamlit.components.v1 as components
 import time
 
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 학생부 AI 설계기", page_icon="📋", layout="wide")
 
-# 2. 양명여고 전용 화사한 테마 CSS
+# 2. 양명여고 전용 화사한 테마 CSS & 🖨️ 인쇄(PDF) 전용 숨김 CSS
 st.markdown("""
 <style>
+    /* 기본 화면 스타일 */
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
@@ -37,6 +39,20 @@ st.markdown("""
     .gemini-btn > button:hover {
         transform: translateY(-5px) !important; box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5) !important;
         background: linear-gradient(135deg, #FFA500 0%, #FF1493 100%) !important;
+    }
+
+    /* 🖨️ PDF 인쇄 시 쓸데없는 요소 숨기기 (결과만 깔끔하게 출력) */
+    @media print {
+        header { display: none !important; }
+        [data-testid="stSidebar"] { display: none !important; }
+        .styled-card { display: none !important; }
+        .gemini-btn { display: none !important; }
+        .home-btn { display: none !important; }
+        .stRadio { display: none !important; }
+        h1, p { display: none !important; } /* 상단 타이틀 숨기기 */
+        /* 인쇄할 때는 배경을 흰색으로, 글씨는 검은색으로 고정 */
+        .stApp { background-color: white !important; }
+        .result-box { box-shadow: none !important; border: 1px solid #ccc !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -69,7 +85,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# [데이터 세팅] 학과 대폭 확장 및 "학과 미정" 추가
+# [데이터 세팅] 
 # -------------------------------------------------------------
 career_data = {
     "인문계열": ["계열 전반 (특정 학과 미정)", "국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과", "중어중문학과", "일어일문학과", "불어불문학과", "노어노문학과", "언어학과", "문헌정보학과", "문화인류학과"],
@@ -89,13 +105,14 @@ activities_db = {
     "이공계 진로캠프 (야간 천체 관측)": "비주도형", "금융 리터러시 아카데미": "비주도형"
 }
 
+# 💡 3학년 전용인 "창의융합 주제탐구 프로젝트"를 추천 목록에서 제거!
 recommended_activities = {
     "인문계열": ["드림업 프로젝트", "독서탐구", "이음 책모임", "전문직업인 초청 특강"],
     "사회계열": ["학생주도 프로젝트 봉사활동", "환경인문독서토론", "전문직업인 초청 특강", "금융 리터러시 아카데미"],
     "교육계열": ["학생주도 프로젝트 봉사활동", "이음 책모임", "스마트폰 이별주간 캠페인", "전문직업인 초청 특강"],
-    "공학계열": ["창의융합 주제탐구 프로젝트", "전문직업인 초청 특강", "과천 과학관 실습 프로그램", "드림업 프로젝트"],
-    "자연계열": ["창의융합 주제탐구 프로젝트", "이공계 진로캠프 (야간 천체 관측)", "과천 과학관 실습 프로그램", "독서탐구"],
-    "의약계열": ["학생주도 프로젝트 봉사활동", "창의융합 주제탐구 프로젝트", "전문직업인 초청 특강", "과천 과학관 실습 프로그램"],
+    "공학계열": ["과천 과학관 실습 프로그램", "전문직업인 초청 특강", "드림업 프로젝트", "독서탐구"],
+    "자연계열": ["이공계 진로캠프 (야간 천체 관측)", "과천 과학관 실습 프로그램", "환경인문독서토론", "독서탐구"],
+    "의약계열": ["학생주도 프로젝트 봉사활동", "독서탐구", "전문직업인 초청 특강", "과천 과학관 실습 프로그램"],
     "예체능계열": ["드림업 프로젝트", "스마트폰 이별주간 캠페인", "이달의 IB 학습자 상 추천", "전문직업인 초청 특강"]
 }
 
@@ -107,32 +124,30 @@ col1, col2 = st.columns(2)
 with col1: selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
 with col2: selected_major = st.selectbox("🎓 세부 학과 (미정일 경우 '계열 전반' 선택)", career_data[selected_track])
 
-# 선택한 학과에 맞춰 텍스트 변환 (학과 미정 처리)
 target_name = selected_major if selected_major != "계열 전반 (특정 학과 미정)" else f"{selected_track} 전반"
 
 st.markdown(f"<h3 style='color: #FF1493; margin-top: 30px; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🎯 STEP 2. 활동 선택 (추천 및 기타 활동)</h3>", unsafe_allow_html=True)
 st.info(f"💡 **[{target_name}]** 진로에 맞춰 활동을 선택하세요. 추천 활동 외에 '다른 활동'을 골라도 AI가 맞춤형으로 가이드해 줍니다!")
 
-# 💡 추천 활동과 다른 활동을 구분해서 보여주기
 recs = recommended_activities[selected_track]
 all_activities = list(activities_db.keys())
 
 display_options = []
-# 1. 전공 추천 활동 먼저 추가
-for act in recs:
-    display_options.append(f"🌟 [전공 추천] {act}")
-# 2. 다른 일반 활동 추가
+for act in recs: display_options.append(f"🌟 [전공 추천] {act}")
 for act in all_activities:
     if act not in recs:
-        display_options.append(f"▶ [다른 활동] {act}")
+        # 3학년 전용 안내 문구 살짝 추가
+        if act == "창의융합 주제탐구 프로젝트":
+            display_options.append(f"▶ [다른 활동] {act} (🎓3학년 전용)")
+        else:
+            display_options.append(f"▶ [다른 활동] {act}")
 
 selected_act_display = st.radio("활동 목록", display_options, label_visibility="collapsed")
 
-# 실제로 선택된 활동 이름만 추출
 if selected_act_display.startswith("🌟 [전공 추천] "):
     selected_act = selected_act_display.replace("🌟 [전공 추천] ", "")
 else:
-    selected_act = selected_act_display.replace("▶ [다른 활동] ", "")
+    selected_act = selected_act_display.replace("▶ [다른 활동] ", "").replace(" (🎓3학년 전용)", "")
 
 act_type = activities_db.get(selected_act, "주도형")
 st.markdown("</div>", unsafe_allow_html=True)
@@ -198,7 +213,6 @@ if gemini_btn:
             with st.spinner(f"🌐 제미나이 AI가 '{target_name}' 진로에 맞춰 실시간으로 가이드를 생성 중입니다..."):
                 genai.configure(api_key=api_key)
                 
-                # 가용 모델 자동 탐색 로직 (에러 원천 차단)
                 available_models = [m.name.replace("models/", "") for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                 
                 if not available_models:
@@ -215,8 +229,9 @@ if gemini_btn:
                     
                     st.success(f"✅ 제미나이 AI가 맞춤형 설계를 완료했습니다! (모델: {chosen_model})")
                     
+                    # 💡 출력 결과 박스 (인쇄 시 이 부분만 깔끔하게 나옵니다)
                     st.markdown(f"""
-                    <div style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
+                    <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
                         <h2 style="color: #CA8A04; margin-top: 0; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">
                             🎯 {target_name} 맞춤형 활동 솔루션
                         </h2>
@@ -225,6 +240,28 @@ if gemini_btn:
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-                
+                    
+                    # 🖨️ PDF 출력 버튼 추가 (JS 활용)
+                    st.write("")
+                    components.html("""
+                    <script>
+                        function printResult() {
+                            try {
+                                window.parent.print();
+                            } catch (e) {
+                                window.print();
+                            }
+                        }
+                    </script>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="printResult()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+                            🖨️ 결과 화면 PDF로 출력하기 (인쇄)
+                        </button>
+                        <p style="color: #64748B; font-size: 0.9rem; margin-top: 10px;">
+                            (버튼이 작동하지 않으면 키보드에서 <b>Ctrl + P</b> 또는 <b>Cmd + P</b>를 누르세요. 결과 화면만 깔끔하게 출력됩니다!)
+                        </p>
+                    </div>
+                    """, height=120)
+
         except Exception as e:
             st.error(f"🚨 제미나이 통신 중 오류가 발생했습니다. (에러 내용: {e})")
