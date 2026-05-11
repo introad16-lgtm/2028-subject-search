@@ -48,20 +48,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 💡 핵심: 스트림릿 비밀 금고(Secrets)에서 API 키 자동 불러오기
+# 💡 스트림릿 비밀 금고(Secrets)에서 API 키 자동 불러오기
 # -------------------------------------------------------------
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
 except:
     api_key = None
 
-# 3. 사이드바 (입력창 삭제, 연결 상태만 표시)
+# 3. 사이드바 (연결 상태 표시)
 with st.sidebar:
     st.markdown("### 🤖 제미나이 AI 연결 상태")
     if api_key:
         st.success("✅ AI 서버에 정상적으로 연결되었습니다!")
     else:
-        st.error("🚨 API 키가 설정되지 않았습니다. 관리자(선생님)의 설정이 필요합니다.")
+        st.error("🚨 API 키가 설정되지 않았습니다. 관리자의 설정이 필요합니다.")
     st.write("---")
     st.markdown("💖 **양명여자고등학교 진로진학부**")
 
@@ -207,7 +207,10 @@ if gemini_btn:
         try:
             with st.spinner(f"🌐 제미나이 AI가 '{selected_major}' 전공에 맞춰 실시간으로 가이드를 생성 중입니다..."):
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # 💡 해결 포인트: 'gemini-1.5-flash' 대신 가장 호환성이 높은 'gemini-pro' 모델로 변경했습니다.
+                model = genai.GenerativeModel('gemini-pro')
+                
                 response = model.generate_content(prompt)
                 
                 st.success("✅ 제미나이 AI의 실시간 맞춤형 설계가 완료되었습니다!")
