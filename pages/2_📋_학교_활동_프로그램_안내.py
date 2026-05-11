@@ -11,7 +11,6 @@ st.markdown("""
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
-    /* 🏠 메인 홈 버튼 디자인 */
     .home-btn > button {
         background-color: #FFFFFF !important; color: #FF1493 !important;
         border: 2px solid #FFC0CB !important; border-radius: 10px !important;
@@ -19,20 +18,15 @@ st.markdown("""
         transition: all 0.3s ease !important; box-shadow: 0 2px 5px rgba(255, 105, 180, 0.1) !important;
         margin-bottom: 20px !important;
     }
-    .home-btn > button:hover {
-        background-color: #FFF0F5 !important; border-color: #FF1493 !important; transform: translateY(-2px) !important;
-    }
+    .home-btn > button:hover { background-color: #FFF0F5 !important; border-color: #FF1493 !important; transform: translateY(-2px) !important; }
 
-    /* 카드형 컨테이너 디자인 */
     .styled-card {
         background-color: #FFFFFF; border: 3px solid #FFC0CB; border-radius: 20px;
         padding: 30px; box-shadow: 0 8px 20px rgba(255, 105, 180, 0.1); margin-bottom: 25px;
     }
 
-    /* 추천 활동 라디오 버튼 스타일 수정 */
     div.row-widget.stRadio > div { flex-direction: column; gap: 10px; }
     
-    /* ✨ 화려한 제미나이 버튼 ✨ */
     .gemini-btn > button {
         background: linear-gradient(135deg, #FF69B4 0%, #FFA500 100%) !important;
         color: white !important; border: none !important; border-radius: 15px !important;
@@ -47,15 +41,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# 💡 스트림릿 비밀 금고(Secrets)에서 API 키 자동 불러오기
-# -------------------------------------------------------------
+# 💡 API 키 자동 불러오기
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
 except:
     api_key = None
 
-# 3. 사이드바 (연결 상태 표시)
 with st.sidebar:
     st.markdown("### 🤖 제미나이 AI 연결 상태")
     if api_key:
@@ -65,13 +56,11 @@ with st.sidebar:
     st.write("---")
     st.markdown("💖 **양명여자고등학교 진로진학부**")
 
-# 홈 버튼
 st.markdown('<div class="home-btn">', unsafe_allow_html=True)
 if st.button("🏠 메인 화면으로 돌아가기"):
     st.switch_page("app.py")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 4. 상단 헤더
 st.markdown("""
 <div style='text-align: center; padding-bottom: 30px;'>
     <h1 style='color: #FF1493; font-weight: 900; font-size: 3.5rem;'>🤖 실시간 학생부 AI 설계기</h1>
@@ -79,9 +68,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# [데이터 세팅] 학과 및 활동 분류
-# -------------------------------------------------------------
+# 학과 및 활동 분류 데이터
 career_data = {
     "인문계열": ["국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과"],
     "사회계열": ["경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과"],
@@ -93,18 +80,11 @@ career_data = {
 }
 
 activities_db = {
-    "드림업 프로젝트": "주도형",
-    "학생주도 프로젝트 봉사활동": "주도형",
-    "독서탐구": "주도형",
-    "이음 책모임": "주도형",
-    "환경인문독서토론": "주도형",
-    "창의융합 주제탐구 프로젝트": "주도형",
-    "스마트폰 이별주간 캠페인": "주도형",
-    "이달의 IB 학습자 상 추천": "주도형",
-    "전문직업인 초청 특강": "비주도형",
-    "과천 과학관 실습 프로그램": "비주도형",
-    "이공계 진로캠프 (야간 천체 관측)": "비주도형",
-    "금융 리터러시 아카데미": "비주도형"
+    "드림업 프로젝트": "주도형", "학생주도 프로젝트 봉사활동": "주도형", "독서탐구": "주도형",
+    "이음 책모임": "주도형", "환경인문독서토론": "주도형", "창의융합 주제탐구 프로젝트": "주도형",
+    "스마트폰 이별주간 캠페인": "주도형", "이달의 IB 학습자 상 추천": "주도형",
+    "전문직업인 초청 특강": "비주도형", "과천 과학관 실습 프로그램": "비주도형",
+    "이공계 진로캠프 (야간 천체 관측)": "비주도형", "금융 리터러시 아카데미": "비주도형"
 }
 
 recommended_activities = {
@@ -117,17 +97,13 @@ recommended_activities = {
     "예체능계열": ["드림업 프로젝트", "스마트폰 이별주간 캠페인", "이달의 IB 학습자 상 추천", "전문직업인 초청 특강"]
 }
 
-# -------------------------------------------------------------
-# STEP 1. 진로 및 추천 활동 선택 
-# -------------------------------------------------------------
+# STEP 1
 st.markdown("<div class='styled-card'>", unsafe_allow_html=True)
 st.markdown("<h3 style='color: #FF1493; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>📝 STEP 1. 계열 및 학과 선택</h3>", unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
-with col1:
-    selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
-with col2:
-    selected_major = st.selectbox("🎓 세부 학과", career_data[selected_track])
+with col1: selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
+with col2: selected_major = st.selectbox("🎓 세부 학과", career_data[selected_track])
 
 st.markdown("<h3 style='color: #FF1493; margin-top: 30px; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🎯 STEP 2. 전공 맞춤 추천 활동 선택</h3>", unsafe_allow_html=True)
 st.info(f"💡 **{selected_major}** 진학을 목표로 하는 학생들에게 아래 활동들을 추천합니다. 하나를 선택해 보세요!")
@@ -135,35 +111,26 @@ st.info(f"💡 **{selected_major}** 진학을 목표로 하는 학생들에게 �
 recs = recommended_activities[selected_track]
 selected_act = st.radio("추천 활동 목록", recs, label_visibility="collapsed")
 act_type = activities_db.get(selected_act, "주도형")
-
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# STEP 3. 활동 성격에 따른 동적 입력창
-# -------------------------------------------------------------
+# STEP 3
 st.markdown("<div class='styled-card'>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='color: #FF1493; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🔍 STEP 3. 세부 정보 입력 ({act_type})</h3>", unsafe_allow_html=True)
 
 custom_title = ""
-
 if act_type == "비주도형":
     st.warning("이 활동은 강연 청취나 정해진 실습을 수행하는 **[비주도형/강의형]** 활동입니다. 수동적인 참여에 그치지 않도록, 제미나이가 **'강연 후 어떻게 심화 후속 활동을 해야 하는지'** 알려드립니다.")
     custom_title = st.text_input("✏️ 수강한 강의/특강/실습의 구체적인 제목을 적어주세요 (필수)", placeholder="예: 빅데이터와 AI 윤리 특강, 과천과학관 DNA 추출 실습")
 else:
     st.success("이 활동은 스스로 주제를 정해 탐구하는 **[학생 주도형]** 활동입니다. 제미나이가 **'어떻게 기획하고 실행해야 하는지'** 구체적인 전개 가이드를 제공합니다.")
     custom_title = st.text_input("💡 (선택) 특별히 다루고 싶은 관심 주제나 읽고 있는 책이 있다면 적어주세요.", placeholder="예: 행동경제학, 플랫폼 독과점 문제 (없으면 비워두셔도 됩니다)")
-
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# STEP 4. 제미나이 실행 버튼 및 AI 로직
-# -------------------------------------------------------------
+# STEP 4
 st.markdown("<h3 style='color: #CA8A04; text-align: center; margin-bottom: 20px;'>🚀 STEP 4. AI에게 분석 요청하기</h3>", unsafe_allow_html=True)
-
 st.markdown('<div class="gemini-btn">', unsafe_allow_html=True)
 gemini_btn = st.button("✨ 제미나이 AI 실시간 활동 가이드 생성 ✨", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
-
 st.write("---")
 
 if gemini_btn:
@@ -182,10 +149,10 @@ if gemini_btn:
             요청: 이 학생이 '{selected_major}' 진학을 위해 이 주도형 활동을 '어떻게 기획하고 실행하면 좋을지' 가이드라인을 제시해 주세요.
             단순히 주제만 던져주지 말고, 어떤 책/논문을 찾아보고, 어떤 방식으로 탐구 결과물을 낼지 구체적인 '행동 가이드'를 작성해야 합니다.
             
-            아래 마크다운 양식에 맞춰 예쁘게 작성하세요:
+            아래 마크다운 양식에 맞춰 작성하세요:
             ### 💡 1. [희망 학과] 맞춤형 탐구 주제 제안 (2가지)
             ### 📚 2. 탐구를 위한 구체적인 활동 전개 팁 (자료 조사 방법, 결과물 형태 등)
-            ### 🎓 3. 생기부 과세특/창체 기록 예시안 (이 활동을 성공적으로 마쳤을 때 기록될 4~5줄)
+            ### 🎓 3. 생기부 과세특/창체 기록 예시안 (4~5줄)
             """
         else:
             prompt = f"""
@@ -196,21 +163,18 @@ if gemini_btn:
             
             요청: 이 학생이 '{custom_title}'라는 수동적인 강의/특강을 들은 후, '{selected_major}' 전공과 연계하여 
             '어떤 심화 후속 활동'을 스스로 진행하면 생기부에 주도성을 어필할 수 있을지 가이드라인을 제시해 주세요.
-            강연 내용을 전공과 엮어 비판적으로 성찰하거나, 추가 독서, 소논문 작성 등으로 확장하는 전략이 필요합니다.
             
-            아래 마크다운 양식에 맞춰 예쁘게 작성하세요:
-            ### 🔍 1. 강의 내용과 [희망 학과]의 연결 고리 (강의 내용을 어떻게 전공의 시각으로 바라볼 것인가)
-            ### 🏃‍♂️ 2. 주도성 어필을 위한 후속 심화 활동 가이드 (추가로 무엇을 읽고, 어떤 보고서를 써야 할지)
-            ### 🎓 3. 생기부 과세특/창체 기록 예시안 (단순 강연 청취가 아닌, 후속 탐구까지 완료했을 때 기록될 4~5줄)
+            아래 마크다운 양식에 맞춰 작성하세요:
+            ### 🔍 1. 강의 내용과 [희망 학과]의 연결 고리
+            ### 🏃‍♂️ 2. 주도성 어필을 위한 후속 심화 활동 가이드 (추가 독서, 소논문 등)
+            ### 🎓 3. 생기부 과세특/창체 기록 예시안 (4~5줄)
             """
             
         try:
             with st.spinner(f"🌐 제미나이 AI가 '{selected_major}' 전공에 맞춰 실시간으로 가이드를 생성 중입니다..."):
                 genai.configure(api_key=api_key)
-                
-                # 💡 해결 포인트: 'gemini-1.5-flash' 대신 가장 호환성이 높은 'gemini-pro' 모델로 변경했습니다.
-                model = genai.GenerativeModel('gemini-pro')
-                
+                # 💡 라이브러리를 최신으로 업데이트했으므로, 가장 똑똑한 1.5-flash 모델을 정상적으로 호출합니다!
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content(prompt)
                 
                 st.success("✅ 제미나이 AI의 실시간 맞춤형 설계가 완료되었습니다!")
