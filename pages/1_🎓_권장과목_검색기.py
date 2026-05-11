@@ -5,37 +5,52 @@ import os
 # 1. 페이지 설정
 st.set_page_config(page_title="2028 권장과목 검색", page_icon="🎓", layout="wide")
 
-# 2. ✨검색창 맞춤형 화사한 핑크 & 옐로우 CSS 마법✨
+# 2. ✨검색창 맞춤형 화사한 핑크 & 옐로우 CSS + 홈 버튼 CSS✨
 st.markdown("""
 <style>
     /* 전체 배경 옅은 핑크 */
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
 
+    /* 🏠 메인 홈 버튼 디자인 (상단 배치용) */
+    .home-btn > button {
+        background-color: #FFFFFF !important;
+        color: #FF1493 !important;
+        border: 2px solid #FFC0CB !important;
+        border-radius: 10px !important;
+        font-weight: 800 !important;
+        padding: 5px 20px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 5px rgba(255, 105, 180, 0.1) !important;
+        margin-bottom: 10px !important;
+    }
+    .home-btn > button:hover {
+        background-color: #FFF0F5 !important;
+        border-color: #FF1493 !important;
+        transform: translateY(-2px) !important;
+    }
+
     /* 🎁 검색 폼(박스) 전체 디자인 */
     [data-testid="stForm"] {
-        background-color: #FFFFFF !important; /* 하얀색 배경 */
-        border: 3px solid #FFC0CB !important; /* 연한 핑크색 테두리 */
-        border-radius: 20px !important; /* 둥근 모서리 */
+        background-color: #FFFFFF !important; 
+        border: 3px solid #FFC0CB !important; 
+        border-radius: 20px !important; 
         padding: 30px !important;
-        box-shadow: 0 8px 20px rgba(255, 105, 180, 0.15) !important; /* 예쁜 그림자 */
+        box-shadow: 0 8px 20px rgba(255, 105, 180, 0.15) !important; 
     }
 
     /* ✏️ 입력창(텍스트 박스) 디자인 */
     div[data-baseweb="input"] > div {
         background-color: #FAFAFA !important;
-        border: 2px solid #FFD700 !important; /* 💛 상큼한 골드색 테두리 */
+        border: 2px solid #FFD700 !important; 
         border-radius: 12px !important;
         transition: all 0.3s ease;
     }
-    
-    /* 입력창 클릭했을 때 (포커스) 효과 */
     div[data-baseweb="input"] > div:focus-within {
-        border-color: #FF1493 !important; /* 💖 핫핑크로 변함 */
+        border-color: #FF1493 !important; 
         box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.2) !important;
     }
 
-    /* 입력창 위 제목(라벨) 글씨 진하게 */
     label p {
         font-weight: 800 !important;
         color: #475569 !important;
@@ -44,7 +59,7 @@ st.markdown("""
 
     /* 🚀 검색하기 버튼 디자인 */
     [data-testid="stFormSubmitButton"] button {
-        background: linear-gradient(135deg, #FF69B4 0%, #FFA500 100%) !important; /* 핑크->오렌지 그라데이션 */
+        background: linear-gradient(135deg, #FF69B4 0%, #FFA500 100%) !important; 
         color: white !important;
         border: none !important;
         border-radius: 15px !important;
@@ -55,15 +70,11 @@ st.markdown("""
         box-shadow: 0 6px 15px rgba(255, 105, 180, 0.3) !important;
         width: 100%;
     }
-    
-    /* 버튼 마우스 올렸을 때 효과 */
     [data-testid="stFormSubmitButton"] button:hover {
         transform: translateY(-3px) !important;
         box-shadow: 0 10px 20px rgba(255, 215, 0, 0.4) !important;
         background: linear-gradient(135deg, #FFA500 0%, #FF1493 100%) !important;
     }
-    
-    /* 버튼 안의 글씨 색상 고정 */
     [data-testid="stFormSubmitButton"] button p {
         color: white !important;
         font-size: 1.2rem !important;
@@ -71,6 +82,12 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# 💡 홈 버튼을 화면 가장 위쪽에 배치!
+st.markdown('<div class="home-btn">', unsafe_allow_html=True)
+if st.button("🏠 메인 화면으로 돌아가기"):
+    st.switch_page("app.py")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # 3. 상단 헤더
 st.markdown("""
@@ -120,14 +137,13 @@ if not df.empty:
     with st.form("search_form"):
         col1, col2 = st.columns(2)
         with col1: 
-            # 💡 양명대 예시 삭제!
             u_keyword = st.text_input("💖 대학 이름", placeholder="예: 서울대, 연세대")
         with col2: 
             d_keyword = st.text_input("💛 학과 / 모집단위", placeholder="예: 컴퓨터, 간호, 디자인")
         
         st.write("") # 간격 살짝 띄우기
         
-        # 💡 버튼을 가운데로 예쁘게 정렬하는 마법 (양옆에 빈 공간 넣기)
+        # 버튼을 가운데로 예쁘게 정렬
         empty1, btn_col, empty2 = st.columns([1, 2, 1])
         with btn_col:
             submit_button = st.form_submit_button("🔍 권장과목 검색하기 ✨", use_container_width=True)
@@ -143,7 +159,6 @@ if not df.empty:
         else:
             st.success(f"✅ 총 **{len(result)}건**의 결과를 찾았습니다.")
             for _, row in result.iterrows():
-                # 결과 박스 (Expander)
                 with st.expander(f"🏫 [{row['대학명']}] {row['모집단위'].strip()}", expanded=True):
                     if row['핵심과목'] != '-': st.markdown(f"**📌 핵심과목:** <span style='color: #FF1493; font-weight: bold;'>{row['핵심과목']}</span>", unsafe_allow_html=True)
                     if row['권장과목'] != '-': st.markdown(f"**💡 권장과목:** <span style='color: #CA8A04; font-weight: bold;'>{row['권장과목']}</span>", unsafe_allow_html=True)
