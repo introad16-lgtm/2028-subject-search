@@ -3,33 +3,38 @@ import streamlit as st
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 진로진학 통합 시스템", page_icon="💖", layout="wide")
 
-# 2. 핑크/옐로우 테마 및 ✨고정 높이 투명 유리 버튼 마법 CSS✨
+# 2. 핑크/옐로우 테마 및 ✨밑줄 제거 + 고정 높이 투명 유리 버튼 마법 CSS✨
 st.markdown("""
 <style>
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
-    /* 링크 밑줄 없애고 글자 색상 유지 */
-    a { text-decoration: none; color: inherit; display: block; height: 100%; }
+    /* ✨핵심✨ 어떤 상황에서도 링크 밑줄 절대 금지! */
+    a, a:hover, a:visited, a:active { 
+        text-decoration: none !important; 
+        color: inherit !important; 
+        display: block; 
+        height: 100%; 
+    }
 
     /* 컬럼을 겹치기 기준으로 설정 */
     div[data-testid="column"] {
         position: relative !important;
     }
     
-    /* ✨해결 핵심✨ 디자인 박스 위에 완벽하게 덮이는 고정 높이 투명 유리 버튼 만들기 */
+    /* 디자인 박스 위에 완벽하게 덮이는 고정 높이 투명 유리 버튼 만들기 */
     div.stButton {
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
-        height: 220px !important; /* 디자인 박스 높이와 똑같이 220px로 강제 고정! */
-        z-index: 999 !important; /* 제일 위로 끌어올림 */
+        height: 220px !important; 
+        z-index: 999 !important; 
     }
     div.stButton > button {
         width: 100% !important;
         height: 220px !important; 
-        background-color: transparent !important; /* 완전 투명하게 */
+        background-color: transparent !important; 
         border: none !important;
         color: transparent !important;
         cursor: pointer !important;
@@ -71,9 +76,9 @@ st.markdown("""
 col1, col2, col3, col4 = st.columns([1, 4, 4, 1])
 
 with col2:
-    # <a> 태그로 감싸서 링크 기능 추가 + 화면에 보이는 '완벽하고 큼직한 디자인 박스' (선생님이 원하셨던 그대로!)
+    # <a> 태그 안에도 style="text-decoration: none;" 추가하여 이중 방어!
     st.markdown("""
-    <a href="./1_%🎓_%권장과목_검색기">
+    <a href="./1_%🎓_%권장과목_검색기" style="text-decoration: none !important;">
         <div class="my-card" style='background-color: white; border: 4px solid #FFD700; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
             <h3 style='color: #CA8A04; font-size: 2.2rem; margin: 0; font-weight: 900;'>🎓 권장과목 검색기</h3>
             <p style='color: #64748B; font-size: 1.1rem; margin-top: 15px; font-weight: 600;'>2028학년도 대학별 필수 과목을<br>빠르게 검색합니다.</p>
@@ -81,14 +86,12 @@ with col2:
     </a>
     """, unsafe_allow_html=True)
     
-    # 기능만 담당하는 '보이지 않는 220px짜리 투명 유리 버튼'
     if st.button("검색기 이동", key="btn1", use_container_width=True):
         st.switch_page("pages/1_🎓_권장과목_검색기.py")
 
 with col3:
-    # <a> 태그로 감싸서 링크 기능 추가 + 화면에 보이는 '완벽하고 큼직한 디자인 박스'
     st.markdown("""
-    <a href="./2_%📋_%학교_활동_프로그램_안내">
+    <a href="./2_%📋_%학교_활동_프로그램_안내" style="text-decoration: none !important;">
         <div class="my-card" style='background-color: white; border: 4px solid #FF1493; border-radius: 20px; padding: 40px 20px; text-align: center; height: 220px; box-shadow: 0 8px 15px rgba(0,0,0,0.05);'>
             <h3 style='color: #FF1493; font-size: 2.2rem; margin: 0; font-weight: 900;'>📋 학교 활동 프로그램 안내</h3>
             <p style='color: #64748B; font-size: 1.1rem; margin-top: 15px; font-weight: 600;'>제미나이 AI가 전공 맞춤형 세특을<br>실시간으로 창작합니다.</p>
@@ -96,7 +99,6 @@ with col3:
     </a>
     """, unsafe_allow_html=True)
     
-    # 기능만 담당하는 '보이지 않는 220px짜리 투명 유리 버튼'
     if st.button("활동 안내 이동", key="btn2", use_container_width=True):
         st.switch_page("pages/2_📋_학교_활동_프로그램_안내.py")
 
