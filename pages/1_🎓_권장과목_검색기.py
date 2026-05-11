@@ -80,7 +80,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 불러오기 함수 (안정화된 버전)
+# 4. 데이터 불러오기 함수
 @st.cache_data
 def load_data():
     target_filename = "data.xlsx"
@@ -120,14 +120,17 @@ if not df.empty:
     with st.form("search_form"):
         col1, col2 = st.columns(2)
         with col1: 
-            u_keyword = st.text_input("💖 대학 이름", placeholder="예: 서울대, 연세대, 양명대")
+            # 💡 양명대 예시 삭제!
+            u_keyword = st.text_input("💖 대학 이름", placeholder="예: 서울대, 연세대")
         with col2: 
             d_keyword = st.text_input("💛 학과 / 모집단위", placeholder="예: 컴퓨터, 간호, 디자인")
         
         st.write("") # 간격 살짝 띄우기
         
-        # 버튼 (위 CSS에서 이미 디자인 완료)
-        submit_button = st.form_submit_button("🔍 권장과목 검색하기 ✨")
+        # 💡 버튼을 가운데로 예쁘게 정렬하는 마법 (양옆에 빈 공간 넣기)
+        empty1, btn_col, empty2 = st.columns([1, 2, 1])
+        with btn_col:
+            submit_button = st.form_submit_button("🔍 권장과목 검색하기 ✨", use_container_width=True)
 
     # 검색 결과 로직
     if submit_button:
