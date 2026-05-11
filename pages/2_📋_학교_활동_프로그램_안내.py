@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 학생부 AI 설계기", page_icon="📋", layout="wide")
 
-# 2. 양명여고 전용 화사한 테마 CSS & 📱모바일 반응형 CSS 추가
+# 2. 양명여고 전용 화사한 테마 CSS
 st.markdown("""
 <style>
     .stApp { background-color: #FFF5F7; } 
@@ -39,7 +39,6 @@ st.markdown("""
         background: linear-gradient(135deg, #FFA500 0%, #FF1493 100%) !important;
     }
 
-    /* 🖨️ PDF 인쇄 전용 숨김 CSS */
     @media print {
         header { display: none !important; }
         [data-testid="stSidebar"] { display: none !important; }
@@ -52,7 +51,6 @@ st.markdown("""
         .result-box { box-shadow: none !important; border: 1px solid #ccc !important; }
     }
 
-    /* 📱 모바일(스마트폰) 환경 전용 반응형 CSS */
     @media (max-width: 768px) {
         h1.main-title { font-size: 2rem !important; line-height: 1.3 !important; }
         p.sub-title { font-size: 1rem !important; margin-top: 5px !important; }
@@ -63,7 +61,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# API 키 자동 불러오기
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
 except:
@@ -162,7 +159,6 @@ if gemini_btn:
     if not api_key: st.error("🚨 제미나이 API 키가 시스템에 설정되어 있지 않습니다. 선생님께 문의하세요!")
     elif act_type == "비주도형" and not custom_title: st.warning("⚠️ 비주도형 활동의 경우, 후속 활동을 기획하기 위해 반드시 '강의 제목'을 입력해 주셔야 합니다.")
     else:
-        # 💡 [생기부 예시안 출력 차단 완료] 💡
         if act_type == "주도형":
             prompt = f"""
             당신은 대한민국 최고 수준의 고등학교 진로진학 전문 교사입니다.
@@ -204,16 +200,11 @@ if gemini_btn:
             with st.spinner(f"🌐 제미나이 AI가 '{target_name}' 진로에 맞춰 실시간으로 가이드와 참고 문헌을 검색 중입니다..."):
                 genai.configure(api_key=api_key)
                 
-                models = [m.name.replace("models/", "") for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                chosen = models[0] if models else "gemini-pro"
-                for t in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"]:
-                    if t in models: 
-                        chosen = t
-                        break
-                model = genai.GenerativeModel(chosen)
+                # 💡 [핵심 최적화] 무거운 list_models() 호출을 없애고 가장 빠르고 할당량이 높은 flash 모델로 직행합니다!
+                model = genai.GenerativeModel("gemini-1.5-flash")
                 response = model.generate_content(prompt)
                 
-                st.success(f"✅ 제미나이 AI가 맞춤형 문헌 검색 및 설계를 완료했습니다! (모델: {chosen})")
+                st.success(f"✅ 제미나이 AI가 맞춤형 문헌 검색 및 설계를 완료했습니다! (모델: gemini-1.5-flash)")
                 
                 st.markdown(f"""
                 <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
@@ -240,4 +231,8 @@ if gemini_btn:
                 """, height=100)
 
         except Exception as e:
-            st.error(f"🚨 통신 오류: {e}")
+            error_message = str(e)
+            if "429" in error_message or "quota" in error_message.lower() or "ResourceExhausted" in error_message:
+                st.warning("⏳ **잠시만요!** 지금 선생님의 무료 일일 사용량이 모두 소진되었거나 접속이 몰렸습니다. 내일 다시 시도하시거나, 새 API 키를 발급받아 주세요! 💖")
+            else:
+                st.error(f"🚨 통신 오류가 발생했습니다: {e}")
