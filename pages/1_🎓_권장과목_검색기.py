@@ -14,11 +14,15 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 데이터 불러오기 함수 (상위 폴더 탐색 기능 추가)
+# 데이터 불러오기 함수 (dada.xlsl 및 상위 폴더 탐색 기능 추가)
 @st.cache_data
 def load_data():
-    # 💡 핵심: 현재 폴더와 상위 폴더('../')를 모두 뒤져서 데이터를 찾도록 똑똑하게 수정했습니다.
-    possible_paths = ['data.csv', 'data.xlsx', '../data.csv', '../data.xlsx']
+    # 💡 핵심: 파일명이 dada.xlsl 또는 dada.xlsx인 것을 상위 폴더('../')까지 모두 뒤져서 찾습니다!
+    possible_paths = [
+        'dada.xlsx', '../dada.xlsx', 
+        'dada.xlsl', '../dada.xlsl',
+        'data.csv', '../data.csv'
+    ]
     file_path = None
     
     for path in possible_paths:
@@ -33,7 +37,9 @@ def load_data():
         if file_path.endswith('.csv'):
             try: df = pd.read_csv(file_path, skiprows=2, encoding='utf-8')
             except: df = pd.read_csv(file_path, skiprows=2, encoding='cp949')
-        else: df = pd.read_excel(file_path, skiprows=2)
+        else: 
+            # 엑셀 파일 읽기 (dada.xlsl 포함)
+            df = pd.read_excel(file_path, skiprows=2)
         
         df['대학명'] = df.iloc[:, 2].fillna('').astype(str)
         df['모집단위'] = df.iloc[:, 3].fillna('').astype(str) + " " + df.iloc[:, 4].fillna('').astype(str)
@@ -47,7 +53,7 @@ def load_data():
 
 df = load_data()
 
-# 4. 검색 화면 구성
+# 검색 화면 구성
 if not df.empty:
     with st.form("search_form"):
         col1, col2 = st.columns(2)
@@ -88,4 +94,4 @@ if not df.empty:
                     if row['권장과목'] != '-': st.markdown(f"**💡 권장과목:** <span style='color: #CA8A04; font-weight: bold;'>{row['권장과목']}</span>", unsafe_allow_html=True)
                     if row['비고'] != '-': st.markdown(f"**📝 비고:** {row['비고']}")
 else:
-    st.error("🚨 데이터 파일(data.csv)을 찾을 수 없거나 파일 내용에 오류가 있습니다. 상위 폴더에 파일이 있는지 확인해주세요.")
+    st.error("🚨 깃허브에 'dada.xlsl' 또는 'dada.xlsx' 파일이 있는지 확인해주세요!")
