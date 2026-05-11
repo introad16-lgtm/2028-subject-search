@@ -3,7 +3,7 @@ import streamlit as st
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 진로진학 통합 시스템", page_icon="💖", layout="wide")
 
-# 2. ✨양명여고 핑크/옐로우/오렌지 완벽 복구 CSS✨
+# 2. ✨양명여고 핑크/옐로우/오렌지 & 모바일 반응형 완벽 CSS✨
 st.markdown("""
 <style>
     /* 전체 배경: 은은한 핑크 */
@@ -11,7 +11,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
     /* -----------------------------------------------------------
-       버튼을 '이전처럼 예쁜 카드'로 만드는 핵심 스타일
+       버튼을 '예쁜 카드'로 만드는 핵심 스타일
     ----------------------------------------------------------- */
     div.stButton > button {
         background-color: white !important;
@@ -52,10 +52,10 @@ st.markdown("""
     }
 
     /* -----------------------------------------------------------
-       ✨ 3개의 칸(Column) 순서에 맞춰 절대 실패하지 않게 색상 강제 주입 ✨
+       컬럼별 포인트 색상 강제 주입
     ----------------------------------------------------------- */
     
-    /* 💛 첫 번째 칸: 권장과목 검색기 (옐로우/골드) */
+    /* 💛 1. 권장과목 검색기 (옐로우) */
     div[data-testid="stHorizontalBlock"] > div:nth-child(1) button { border: 4px solid #FFD700 !important; }
     div[data-testid="stHorizontalBlock"] > div:nth-child(1) button strong { color: #CA8A04 !important; }
     div[data-testid="stHorizontalBlock"] > div:nth-child(1) button:hover {
@@ -65,7 +65,7 @@ st.markdown("""
         border-color: #FFA500 !important;
     }
 
-    /* 💖 두 번째 칸: 학교 활동 안내 (핫핑크) */
+    /* 💖 2. 학교 활동 안내 (핫핑크) */
     div[data-testid="stHorizontalBlock"] > div:nth-child(2) button { border: 4px solid #FF1493 !important; }
     div[data-testid="stHorizontalBlock"] > div:nth-child(2) button strong { color: #FF1493 !important; }
     div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
@@ -75,7 +75,7 @@ st.markdown("""
         border-color: #FF69B4 !important;
     }
 
-    /* 🍊 세 번째 칸: 내신 등급 산출기 (오렌지) */
+    /* 🍊 3. 내신 등급 산출기 (오렌지) */
     div[data-testid="stHorizontalBlock"] > div:nth-child(3) button { border: 4px solid #FF8C00 !important; }
     div[data-testid="stHorizontalBlock"] > div:nth-child(3) button strong { color: #EA580C !important; }
     div[data-testid="stHorizontalBlock"] > div:nth-child(3) button:hover {
@@ -84,15 +84,28 @@ st.markdown("""
         background-color: #FFF5EB !important;
         border-color: #FF7F50 !important;
     }
+
+    /* -----------------------------------------------------------
+       📱 모바일 메인 타이틀 반응형 조절
+    ----------------------------------------------------------- */
+    @media (max-width: 768px) {
+        .main-header-title { font-size: 2.2rem !important; line-height: 1.2 !important; }
+        .main-header-subtitle { font-size: 1.1rem !important; margin-top: 10px !important; }
+        .main-header-dept { font-size: 0.9rem !important; margin-top: 5px !important; }
+        div.stButton > button { height: 200px !important; padding: 10px !important; }
+        div.stButton > button strong { font-size: 1.5rem !important; }
+        div.stButton > button p { font-size: 0.9rem !important; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 메인 타이틀 화면
+# 3. 메인 타이틀 화면 (반응형 클래스 적용)
 st.markdown("""
-    <div style='text-align: center; padding: 50px 0;'>
+    <div style='text-align: center; padding: 40px 0;'>
         <div style='font-size: 5rem; margin-bottom: 10px;'>🏫💖💛</div>
-        <h1 style='color: #FF1493; font-size: 3.5rem; font-weight: 900;'>양명여자고등학교<br>진로진학 통합 포털</h1>
-        <p style='color: #FF8C00; font-size: 1.5rem; margin-top: 20px; font-weight: 600;'>학생들의 꿈과 미래를 잇는 상큼한 통로입니다.</p>
+        <h1 class='main-header-title' style='color: #FF1493; font-size: 3.5rem; font-weight: 900;'>양명여자고등학교<br>진로진학 통합 포털</h1>
+        <p class='main-header-subtitle' style='color: #FF8C00; font-size: 1.5rem; margin-top: 20px; font-weight: 600;'>학생들의 꿈과 미래를 잇는 상큼한 통로입니다.</p>
+        <p class='main-header-dept' style='color: #64748B; font-size: 1.1rem; margin-top: 8px; font-weight: 700;'>- 양명여자고등학교 진로진학부 -</p>
     </div>
     <hr style='border: 1px solid #FFC0CB; margin-bottom: 40px;'>
     <div style='text-align: center; margin-bottom: 40px;'>
@@ -100,7 +113,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. 3등분으로 딱 떨어지는 버튼형 카드 레이아웃
+# 4. 버튼형 카드 레이아웃
 col1, col2, col3 = st.columns(3)
 
 with col1:
