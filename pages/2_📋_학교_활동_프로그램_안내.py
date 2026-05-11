@@ -1,111 +1,114 @@
 import streamlit as st
-import google.generativeai as genai
-import streamlit.components.v1 as components
 
-st.set_page_config(page_title="AI 생기부 설계기", page_icon="🎯", layout="wide")
+# 1. 페이지 설정
+st.set_page_config(page_title="양명여고 학교 활동 프로그램", page_icon="📋", layout="wide")
 
-# 핑크 & 옐로우 배경 테마
-st.markdown("<style>.stApp { background-color: #FFF5F7; }</style>", unsafe_allow_html=True)
-
-# 1. API 키 금고에서 꺼내기
-try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    api_ready = True
-except Exception as e:
-    api_ready = False
-
-# 2. 상단 헤더
-st.markdown("""
-<div style='text-align: center; padding-bottom: 20px;'>
-    <h1 style='color: #FF1493; font-weight: 800;'>🎯 AI 생기부 핀셋 설계 시스템</h1>
-    <p style='color: #64748B;'>제미나이 AI가 현장 주제를 분석하여 전공 맞춤형 세특을 실시간으로 창작합니다.</p>
-</div>
-""", unsafe_allow_html=True)
-
-# 3. 입력 창 구성
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<h4 style='color: #FF1493;'>📚 1. 희망 전공 선택</h4>", unsafe_allow_html=True)
-    major_sel = st.selectbox("전공을 선택하세요", 
-        ["국어국문학과", "영어영문학과", "경영학과", "경제학과", "미디어커뮤니케이션", "수학과", "화학과", "생명과학과", "컴퓨터공학과", "인공지능(AI)학과", "기계/항공우주공학", "의예/치의예과", "간호학과", "교육/특수교육과"], 
-        label_visibility="collapsed")
-with col2:
-    st.markdown("<h4 style='color: #CA8A04;'>💡 2. 현장 활동 주제 입력</h4>", unsafe_allow_html=True)
-    expert_inp = st.text_input("🎙️ 전문직업인 특강 주제", placeholder="예: 인공지능 윤리, 범죄 프로파일링")
-    science_inp = st.text_input("🔬 과천과학관 실습 기기", placeholder="예: 적외선 분광기, 유전자 가위")
-
-st.write("") # 간격 띄우기
-
-# 4. AI 실행 버튼
+# 2. ✨학교 활동 페이지 전용 상큼 테마 CSS✨
 st.markdown("""
 <style>
-    .ai-btn > button {
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #b00020; border: none; border-radius: 20px; font-weight: 900; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); padding: 15px 20px;
+    /* 전체 배경 핑크 */
+    .stApp { background-color: #FFF5F7; } 
+    [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
+
+    /* 🏠 메인 홈 버튼 디자인 */
+    .home-btn > button {
+        background-color: #FFFFFF !important;
+        color: #FF1493 !important;
+        border: 2px solid #FFC0CB !important;
+        border-radius: 10px !important;
+        font-weight: 800 !important;
+        padding: 5px 20px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 5px rgba(255, 105, 180, 0.1) !important;
+        margin-bottom: 20px !important;
     }
-    .ai-btn > button:hover { background: linear-gradient(135deg, #FFA500 0%, #FFD700 100%); transform: scale(1.02); }
+    .home-btn > button:hover {
+        background-color: #FFF0F5 !important;
+        border-color: #FF1493 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* 🎯 계열/학과 선택 박스 구역 디자인 */
+    .selection-container {
+        background-color: #FFFFFF;
+        border: 3px solid #FF1493;
+        border-radius: 20px;
+        padding: 30px;
+        margin-top: 20px;
+        box-shadow: 0 8px 20px rgba(255, 105, 180, 0.1);
+    }
+
+    /* 선택창 제목 디자인 */
+    .selection-label {
+        color: #FF1493;
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
+
+    /* 셀렉트박스 테두리 디자인 */
+    div[data-baseweb="select"] > div {
+        border: 2px solid #FFD700 !important;
+        border-radius: 12px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="ai-btn">', unsafe_allow_html=True)
-run_ai = st.button("✨ 제미나이 AI 실시간 창작 시작 ✨", use_container_width=True)
+# 🏠 메인 홈 버튼
+st.markdown('<div class="home-btn">', unsafe_allow_html=True)
+if st.button("🏠 메인 화면으로 돌아가기"):
+    st.switch_page("app.py")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 5. AI 창작 로직
-if run_ai:
-    if not api_ready:
-        st.error("🚨 관리자 대시보드의 Secrets(기미)에 API 키가 제대로 저장되지 않았습니다!")
-    elif not expert_inp and not science_inp:
-        st.warning("💡 특강 주제나 과학관 실습 기기 중 최소 1개는 입력해야 AI가 글을 쓸 수 있습니다.")
-    else:
-        exp_topic = expert_inp if expert_inp else "진로 탐색 특강"
-        sci_topic = science_inp if science_inp else "첨단 과학 기술 실습"
-        
-        with st.spinner("✨ 구글 제미나이 AI가 현장 주제를 분석하여 글을 짓고 있습니다... (약 5~7초)"):
-            prompt = f"""
-            너는 양명여고 진로진학 전문 컨설턴트야.
-            학생의 희망 전공: {major_sel}
-            
-            1. 전문직업인 특강 주제: [{exp_topic}]
-            이 특강을 들은 학생이 전공과 연결하여 교과세특이나 후속 탐구로 쓸 수 있는 매우 구체적이고 학술적인 심화 탐구 활동 3가지를 각각 1줄(50자 이내)로 짧게 적어줘.
-            
-            2. 과천과학관 실습 기기: [{sci_topic}]
-            이 실습을 한 학생이 전공과 연결하여 데이터 오차 증명 또는 사회적 파급력에 관해 쓸 수 있는 과세특 탐구 활동 3가지를 각각 1줄(50자 이내)로 짧게 적어줘.
-            
-            규칙: 반드시 구분자 '|'로만 6개의 문장을 구분해서 답변해. 다른 설명은 절대 금지.
-            형식: 특강문장1|특강문장2|특강문장3|실습문장1|실습문장2|실습문장3
-            """
-            
-            try:
-                response = model.generate_content(prompt)
-                res_text = response.text.strip().split('|')
-                if len(res_text) < 6:
-                    res_text = ["AI 생성 오류 (다시 시도해주세요)"] * 6
-                
-                # HTML 결과창 출력
-                html_result = f"""
-                <div style="font-family: sans-serif; padding: 20px; background: white; border-radius: 15px; border: 2px solid #FFC0CB;">
-                    <h3 style="color: #FF1493; margin-top: 0;">✅ AI 창작 완료! ({major_sel})</h3>
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: #CA8A04;">🎙️ 특강: [{exp_topic}] 연계 세특</h4>
-                        <ul style="line-height: 1.6; color: #333;">
-                            <li>✔ {res_text[0]}</li>
-                            <li>✔ {res_text[1]}</li>
-                            <li>✔ {res_text[2]}</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 style="color: #CA8A04;">🔬 실습: [{sci_topic}] 연계 세특</h4>
-                        <ul style="line-height: 1.6; color: #333;">
-                            <li>✔ {res_text[3]}</li>
-                            <li>✔ {res_text[4]}</li>
-                            <li>✔ {res_text[5]}</li>
-                        </ul>
-                    </div>
-                </div>
-                """
-                st.write("")
-                st.markdown(html_result, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"오류가 발생했습니다: {e}")
+# 3. 상단 헤더
+st.markdown("""
+<div style='text-align: center; padding-bottom: 40px;'>
+    <h1 style='color: #FF1493; font-weight: 900; font-size: 3rem;'>📋 학교 활동 프로그램 안내</h1>
+    <p style='color: #64748B; font-size: 1.2rem; margin-top: 10px;'>나의 진로에 딱 맞는 활동은 무엇일까요? 계열과 학과를 선택해 보세요.</p>
+</div>
+""", unsafe_allow_html=True)
+
+# 4. 계열 및 학과 데이터 구성
+# 선생님, 여기에 학과를 더 추가하거나 수정하실 수 있습니다!
+career_data = {
+    "인문계열": ["국어국문학과", "영어영문학과", "사학사", "철학과", "심리학과"],
+    "사회계열": ["경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과"],
+    "교육계열": ["초등교육과", "국어교육과", "수학교육과", "영어교육과", "유아교육과", "특수교육과"],
+    "공학계열": ["컴퓨터공학과", "인공지능(AI)학과", "기계공학과", "전기전자공학과", "화학공학과", "건축학과"],
+    "자연계열": ["수학과", "물리학과", "화학과", "생명과학과", "환경학과"],
+    "의약계열": ["의예과", "치의예과", "한의예과", "약학과", "간호학과", "수의예과"],
+    "예체능계열": ["디자인학과", "회화과", "음악학과", "체육학과", "연극영화과"]
+}
+
+# 5. 선택 메뉴 구현
+st.markdown("<div class='selection-container'>", unsafe_allow_html=True)
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("<p class='selection-label'>🌟 1. 희망 계열 선택</p>", unsafe_allow_html=True)
+    selected_field = st.selectbox(
+        "계열을 선택해 주세요",
+        options=list(career_data.keys()),
+        index=0,
+        label_visibility="collapsed"
+    )
+
+with col2:
+    st.markdown("<p class='selection-label'>🎓 2. 희망 학과 선택</p>", unsafe_allow_html=True)
+    # 선택된 계열에 해당하는 학과 목록만 가져오기
+    departments = career_data[selected_field]
+    selected_dept = st.selectbox(
+        "학과를 선택해 주세요",
+        options=departments,
+        index=0,
+        label_visibility="collapsed"
+    )
+st.markdown("</div>", unsafe_allow_html=True)
+
+# 선택 결과 확인 (임시 메시지)
+st.write("")
+st.success(f"📍 현재 **{selected_field} > {selected_dept}** 지망을 선택하셨습니다. 아래에서 맞춤형 활동을 확인하세요!")
+
+# ----------------------------------------------------------------
+# 이 아래에 앞으로 활동 프로그램 안내 내용을 채워넣을 예정입니다!
+# ----------------------------------------------------------------
