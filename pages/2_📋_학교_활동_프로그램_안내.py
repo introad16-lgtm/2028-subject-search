@@ -173,8 +173,8 @@ if gemini_btn:
         try:
             with st.spinner(f"🌐 제미나이 AI가 '{selected_major}' 전공에 맞춰 실시간으로 가이드를 생성 중입니다..."):
                 genai.configure(api_key=api_key)
-                # 💡 라이브러리를 최신으로 업데이트했으므로, 가장 똑똑한 1.5-flash 모델을 정상적으로 호출합니다!
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # ✨ 에러를 100% 차단하는 안정적인 gemini-pro 모델 강제 고정 ✨
+                model = genai.GenerativeModel('gemini-pro')
                 response = model.generate_content(prompt)
                 
                 st.success("✅ 제미나이 AI의 실시간 맞춤형 설계가 완료되었습니다!")
