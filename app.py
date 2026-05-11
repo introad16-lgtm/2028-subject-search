@@ -3,17 +3,15 @@ import streamlit as st
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 진로진학 통합 시스템", page_icon="💖", layout="wide")
 
-# 2. 핑크/옐로우 테마 및 ✨절대 실패하지 않는 색상 CSS✨
+# 2. 핑크/옐로우/오렌지 테마 CSS
 st.markdown("""
 <style>
     /* 전체 배경 핑크 */
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
-    /* -----------------------------------------------------------
-       공통 카드(버튼) 스타일
-    ----------------------------------------------------------- */
-    button[kind="secondary"], button[kind="primary"] {
+    /* 공통 카드(버튼) 스타일 */
+    div.stButton > button {
         background-color: white !important;
         border-radius: 20px !important;
         height: 240px !important;
@@ -27,8 +25,8 @@ st.markdown("""
         padding: 20px !important;
     }
 
-    /* 설명 텍스트 (회색으로 깔끔하게) */
-    button[kind="secondary"] p, button[kind="primary"] p {
+    /* 설명 텍스트 공통 */
+    div.stButton > button p {
         color: #64748B !important;   
         font-size: 1.1rem !important; 
         font-weight: 600 !important;
@@ -36,51 +34,43 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    /* 제목(굵은 글씨) 공통: 엄청 크게! */
-    button[kind="secondary"] strong, button[kind="primary"] strong {
-        font-size: 2.3rem !important;
+    /* 제목(굵은 글씨) 공통 */
+    div.stButton > button strong {
+        font-size: 2.1rem !important;
         font-weight: 900 !important;
         display: block !important;
         margin-bottom: 20px !important;
     }
 
-    /* -----------------------------------------------------------
-       💛 왼쪽 검색기 카드 (Secondary 이름표를 단 녀석)
-    ----------------------------------------------------------- */
-    button[kind="secondary"] {
-        border: 4px solid #FFD700 !important; /* 옐로우 테두리 */
-    }
-    button[kind="secondary"] strong {
-        color: #CA8A04 !important; /* 🌟 진한 골드색 제목 🌟 */
-    }
-    button[kind="secondary"]:hover {
-        transform: translateY(-10px) !important;
-        box-shadow: 0 15px 30px rgba(255, 215, 0, 0.3) !important;
-        background-color: #FFFFF8 !important;
-        border-color: #FFA500 !important;
+    /* 💛 첫 번째 카드: 권장과목 검색기 */
+    div[data-testid="column"]:nth-of-type(2) div.stButton > button { border: 4px solid #FFD700 !important; }
+    div[data-testid="column"]:nth-of-type(2) div.stButton > button strong { color: #CA8A04 !important; }
+    div[data-testid="column"]:nth-of-type(2) div.stButton > button:hover {
+        transform: translateY(-10px) !important; box-shadow: 0 15px 30px rgba(255, 215, 0, 0.3) !important;
+        background-color: #FFFFF8 !important; border-color: #FFA500 !important;
     }
 
-    /* -----------------------------------------------------------
-       💖 오른쪽 활동 안내 카드 (Primary 이름표를 단 녀석)
-    ----------------------------------------------------------- */
-    button[kind="primary"] {
-        border: 4px solid #FF1493 !important; /* 핑크 테두리 */
+    /* 💖 두 번째 카드: 학교 활동 안내 */
+    div[data-testid="column"]:nth-of-type(3) div.stButton > button { border: 4px solid #FF1493 !important; }
+    div[data-testid="column"]:nth-of-type(3) div.stButton > button strong { color: #FF1493 !important; }
+    div[data-testid="column"]:nth-of-type(3) div.stButton > button:hover {
+        transform: translateY(-10px) !important; box-shadow: 0 15px 30px rgba(255, 20, 147, 0.3) !important;
+        background-color: #FFF9FB !important; border-color: #FF69B4 !important;
     }
-    button[kind="primary"] strong {
-        color: #FF1493 !important; /* 🌟 핫핑크색 제목 🌟 */
-    }
-    button[kind="primary"]:hover {
-        transform: translateY(-10px) !important;
-        box-shadow: 0 15px 30px rgba(255, 20, 147, 0.3) !important;
-        background-color: #FFF9FB !important;
-        border-color: #FF69B4 !important;
+
+    /* 🍊 세 번째 카드: 내신 등급 산출기 */
+    div[data-testid="column"]:nth-of-type(4) div.stButton > button { border: 4px solid #FF8C00 !important; }
+    div[data-testid="column"]:nth-of-type(4) div.stButton > button strong { color: #EA580C !important; }
+    div[data-testid="column"]:nth-of-type(4) div.stButton > button:hover {
+        transform: translateY(-10px) !important; box-shadow: 0 15px 30px rgba(255, 140, 0, 0.3) !important;
+        background-color: #FFF5EB !important; border-color: #FF7F50 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # 3. 메인 타이틀 화면
 st.markdown("""
-    <div style='text-align: center; padding: 50px 0;'>
+    <div style='text-align: center; padding: 40px 0;'>
         <div style='font-size: 5rem; margin-bottom: 10px;'>🏫💖💛</div>
         <h1 style='color: #FF1493; font-size: 3.5rem; font-weight: 900;'>양명여자고등학교<br>진로진학 통합 포털</h1>
         <p style='color: #FF8C00; font-size: 1.5rem; margin-top: 20px; font-weight: 600;'>학생들의 꿈과 미래를 잇는 상큼한 통로입니다.</p>
@@ -91,17 +81,19 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. 버튼형 카드 레이아웃
-col1, col2, col3, col4 = st.columns([1, 4, 4, 1])
+# 4. 버튼형 카드 레이아웃 (3등분)
+col1, col2, col3, col4, col5 = st.columns([0.3, 3, 3, 3, 0.3])
 
 with col2:
-    # ✨핵심: type="secondary" 속성을 부여해서 노란색 CSS가 강제로 적용되게 합니다!
-    if st.button("**🎓 권장과목 검색기**\n\n2028학년도 대학별 필수 과목을\n빠르고 정확하게 검색합니다.", type="secondary", use_container_width=True):
+    if st.button("**🎓 권장과목 검색기**\n\n2028학년도 대학별 필수 과목을\n빠르고 정확하게 검색합니다.", use_container_width=True):
         st.switch_page("pages/1_🎓_권장과목_검색기.py")
 
 with col3:
-    # ✨핵심: type="primary" 속성을 부여해서 핑크색 CSS가 강제로 적용되게 합니다!
-    if st.button("**📋 학교 활동 프로그램 안내**\n\n제미나이 AI가 전공 맞춤형 세특을\n실시간으로 설계하고 창작합니다.", type="primary", use_container_width=True):
+    if st.button("**📋 학교 활동 프로그램**\n\n제미나이 AI가 전공 맞춤형 세특을\n실시간으로 설계하고 창작합니다.", use_container_width=True):
         st.switch_page("pages/2_📋_학교_활동_프로그램_안내.py")
+
+with col4:
+    if st.button("**📊 내신 등급 산출기**\n\n2028학년도 5등급제 성적을\n대학별 기준에 맞춰 자동 환산합니다.", use_container_width=True):
+        st.switch_page("pages/3_📊_내신_등급_산출기.py")
 
 st.sidebar.info("💖 양명여고 학생들의 밝은 미래를 응원합니다!")
