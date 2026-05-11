@@ -3,7 +3,7 @@ import streamlit as st
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 진로진학 통합 시스템", page_icon="💖", layout="wide")
 
-# 2. 핑크/옐로우 테마 및 ✨글자색 완벽 복구✨ 네이티브 버튼 CSS
+# 2. 핑크/옐로우 테마 및 ✨절대 실패하지 않는 색상 CSS✨
 st.markdown("""
 <style>
     /* 전체 배경 핑크 */
@@ -11,12 +11,12 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
     /* -----------------------------------------------------------
-       버튼을 거대한 디자인 카드(박스)로 탈바꿈 시키는 핵심 CSS
+       공통 카드(버튼) 스타일
     ----------------------------------------------------------- */
-    div.stButton > button {
+    button[kind="secondary"], button[kind="primary"] {
         background-color: white !important;
         border-radius: 20px !important;
-        height: 240px !important; /* 높이를 조금 더 여유있게 조정 */
+        height: 240px !important;
         width: 100% !important;
         box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
         transition: all 0.3s ease !important;
@@ -24,38 +24,36 @@ st.markdown("""
         flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
-        /* 기본 설명 텍스트 스타일 */
-        color: #64748B !important;   
-        font-size: 1.1rem !important; 
-        font-weight: 600 !important;
-        line-height: 1.5 !important;
         padding: 20px !important;
     }
 
-    /* 버튼 내부의 텍스트 정렬 */
-    div.stButton > button div[data-testid="stMarkdownContainer"] {
-        width: 100% !important;
-        text-align: center !important;
+    /* 설명 텍스트 (회색으로 깔끔하게) */
+    button[kind="secondary"] p, button[kind="primary"] p {
+        color: #64748B !important;   
+        font-size: 1.1rem !important; 
+        font-weight: 600 !important;
+        line-height: 1.6 !important;
+        margin: 0 !important;
     }
 
-    /* ✨ 제목 부분(Bold처리된 부분)만 골라서 색상과 크기를 크게! */
-    div.stButton > button strong {
-        font-size: 2.3rem !important; /* 제목 크기 대폭 확대 */
+    /* 제목(굵은 글씨) 공통: 엄청 크게! */
+    button[kind="secondary"] strong, button[kind="primary"] strong {
+        font-size: 2.3rem !important;
         font-weight: 900 !important;
         display: block !important;
-        margin-bottom: 20px !important; /* 제목과 설명 사이 간격 */
+        margin-bottom: 20px !important;
     }
 
     /* -----------------------------------------------------------
-       💛 왼쪽 검색기 카드 전용 스타일 (옐로우-골드)
+       💛 왼쪽 검색기 카드 (Secondary 이름표를 단 녀석)
     ----------------------------------------------------------- */
-    div[data-testid="column"]:nth-of-type(2) div.stButton > button {
+    button[kind="secondary"] {
         border: 4px solid #FFD700 !important; /* 옐로우 테두리 */
     }
-    div[data-testid="column"]:nth-of-type(2) div.stButton > button strong {
-        color: #CA8A04 !important; /* 진한 골드색 제목 */
+    button[kind="secondary"] strong {
+        color: #CA8A04 !important; /* 🌟 진한 골드색 제목 🌟 */
     }
-    div[data-testid="column"]:nth-of-type(2) div.stButton > button:hover {
+    button[kind="secondary"]:hover {
         transform: translateY(-10px) !important;
         box-shadow: 0 15px 30px rgba(255, 215, 0, 0.3) !important;
         background-color: #FFFFF8 !important;
@@ -63,15 +61,15 @@ st.markdown("""
     }
 
     /* -----------------------------------------------------------
-       💖 오른쪽 활동 안내 카드 전용 스타일 (핑크)
+       💖 오른쪽 활동 안내 카드 (Primary 이름표를 단 녀석)
     ----------------------------------------------------------- */
-    div[data-testid="column"]:nth-of-type(3) div.stButton > button {
+    button[kind="primary"] {
         border: 4px solid #FF1493 !important; /* 핑크 테두리 */
     }
-    div[data-testid="column"]:nth-of-type(3) div.stButton > button strong {
-        color: #FF1493 !important; /* 핫핑크색 제목 */
+    button[kind="primary"] strong {
+        color: #FF1493 !important; /* 🌟 핫핑크색 제목 🌟 */
     }
-    div[data-testid="column"]:nth-of-type(3) div.stButton > button:hover {
+    button[kind="primary"]:hover {
         transform: translateY(-10px) !important;
         box-shadow: 0 15px 30px rgba(255, 20, 147, 0.3) !important;
         background-color: #FFF9FB !important;
@@ -97,12 +95,13 @@ st.markdown("""
 col1, col2, col3, col4 = st.columns([1, 4, 4, 1])
 
 with col2:
-    # **별표**로 감싸진 부분이 CSS 마법을 통해 '색상이 들어간 거대 제목'이 됩니다!
-    if st.button("**🎓 권장과목 검색기**\n\n2028학년도 대학별 필수 과목을\n빠르고 정확하게 검색합니다.", use_container_width=True):
+    # ✨핵심: type="secondary" 속성을 부여해서 노란색 CSS가 강제로 적용되게 합니다!
+    if st.button("**🎓 권장과목 검색기**\n\n2028학년도 대학별 필수 과목을\n빠르고 정확하게 검색합니다.", type="secondary", use_container_width=True):
         st.switch_page("pages/1_🎓_권장과목_검색기.py")
 
 with col3:
-    if st.button("**📋 학교 활동 프로그램 안내**\n\n제미나이 AI가 전공 맞춤형 세특을\n실시간으로 설계하고 창작합니다.", use_container_width=True):
+    # ✨핵심: type="primary" 속성을 부여해서 핑크색 CSS가 강제로 적용되게 합니다!
+    if st.button("**📋 학교 활동 프로그램 안내**\n\n제미나이 AI가 전공 맞춤형 세특을\n실시간으로 설계하고 창작합니다.", type="primary", use_container_width=True):
         st.switch_page("pages/2_📋_학교_활동_프로그램_안내.py")
 
 st.sidebar.info("💖 양명여고 학생들의 밝은 미래를 응원합니다!")
