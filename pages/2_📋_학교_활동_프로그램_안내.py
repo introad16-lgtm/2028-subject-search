@@ -2,6 +2,20 @@ import streamlit as st
 import google.generativeai as genai
 import streamlit.components.v1 as components
 
+# --- 💡 404 에러 & 과부하 방지용 스마트 캐시 함수 ---
+@st.cache_data(ttl=3600)
+def get_best_model(api_key):
+    try:
+        genai.configure(api_key=api_key)
+        # 내 API 키로 쓸 수 있는 모델 목록을 딱 한 번만 싹 불러와서 메모리에 저장합니다.
+        models = [m.name.replace("models/", "") for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        for t in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"]:
+            if t in models: 
+                return t
+        return models[0] if models else "gemini-1.5-flash"
+    except:
+        return "gemini-1.5-flash"
+
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 학생부 AI 설계기", page_icon="📋", layout="wide")
 
@@ -200,21 +214,13 @@ if gemini_btn:
             with st.spinner(f"🌐 제미나이 AI가 '{target_name}' 진로에 맞춰 실시간으로 가이드와 참고 문헌을 검색 중입니다..."):
                 genai.configure(api_key=api_key)
                 
-                used_model = ""
-                # 💡 [안전망 추가] 최신 모델(flash) 시도 후, 404 에러 시 범용 모델(pro)로 자동 우회!
-                try:
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    response = model.generate_content(prompt)
-                    used_model = "gemini-1.5-flash"
-                except Exception as inner_e:
-                    if "404" in str(inner_e):
-                        model = genai.GenerativeModel("gemini-pro")
-                        response = model.generate_content(prompt)
-                        used_model = "gemini-pro"
-                    else:
-                        raise inner_e # 429 과부하 에러 등은 바깥쪽으로 넘겨서 예쁜 안내문을 띄움
+                # 💡 스마트 캐시 함수를 호출하여 내 API 키에 100% 맞는 모델을 알아서 찾아냅니다!
+                chosen_model = get_best_model(api_key)
                 
-                st.success(f"✅ 제미나이 AI가 맞춤형 문헌 검색 및 설계를 완료했습니다! (모델: {used_model})")
+                model = genai.GenerativeModel(chosen_model)
+                response = model.generate_content(prompt)
+                
+                st.success(f"✅ 제미나이 AI가 맞춤형 문헌 검색 및 설계를 완료했습니다! (구동 모델: {chosen_model})")
                 
                 st.markdown(f"""
                 <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
