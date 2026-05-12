@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import streamlit.components.v1 as components
-import random  # 💡 클릭 시마다 내용을 다르게 섞어주기 위한 랜덤 모듈 추가
+import random  # 💡 클릭 시마다 내용을 다르게 섞어주기 위한 랜덤 모듈
 
 # --- 💡 스마트 캐시 함수 ---
 @st.cache_data(ttl=3600)
@@ -18,105 +18,117 @@ def get_best_model(api_key):
 
 # --- 📚 [세부 학과별 특화 DB] 주제와 도서를 대폭 확장 (클릭 시마다 랜덤 추출됨) ---
 MAJOR_DB = {
-    "국어국문학과": {
+    "반도체공학과": {
         "topics": [
-            "K-콘텐츠 확산에 따른 한국어 교육 모델 및 현지화 전략 설계", 
-            "디지털 매체(숏폼, SNS) 시대의 국어 문법 파괴 현상과 순화 방안", 
-            "고전문학의 메타버스 플랫폼 구현 방안과 인문학적 가치 탐구",
-            "다문화 사회 진입에 따른 이중언어 아동을 위한 맞춤형 국어 교육 정책",
-            "현대시와 대중가요 가사의 문학적 상관관계 분석 및 서정성 연구",
-            "지역 방언의 소멸 위기와 보존을 위한 문화적/제도적 접근 방안"
+            "차세대 반도체 공정에서의 EUV(극자외선) 노광 기술의 한계와 돌파구 연구",
+            "PIM(Processor-In-Memory) 기술을 활용한 AI 연산 효율성 극대화 방안",
+            "글로벌 반도체 공급망 재편이 한국 소부장(소재·부품·장비) 산업에 미치는 영향",
+            "시스템 반도체 설계를 위한 하드웨어 가속기 구조 분석 및 최적화 탐구",
+            "나노 시트(GAA) 구조 도입에 따른 트랜지스터 성능 변화와 전력 효율 연구",
+            "메모리 반도체의 고대역폭 메모리(HBM) 기술 발전과 AI 서버 시장 전망"
         ],
-        "books": ["언어의 온도", "한국어의 계통", "생각하는 힘, 노자 인문학", "말의 그릇", "우리말 어원 사전"], 
-        "links": ["국립국어원", "한국어학회"]
+        "books": ["반도체 제국의 미래", "칩 워(Chip War)", "물리학을 품은 반도체", "거의 모든 IT의 역사", "엔지니어의 서재"],
+        "links": ["한국반도체산업협회", "삼성반도체이야기"]
     },
-    "심리학과": {
+    "미래자동차공학과": {
         "topics": [
-            "확증 편향이 디지털 알고리즘과 만났을 때 생기는 사회적 문제와 대안", 
-            "청소년 우울증 예방을 위한 학교 내 인지행동치료(CBT) 적용 방안", 
-            "범죄 심리학 관점에서 본 사이버 폭력 가해자의 심리 기제",
-            "가스라이팅과 그루밍 범죄의 심리학적 메커니즘 분석",
-            "현대인의 완벽주의와 번아웃 증후군의 상관관계 및 회복 탄력성",
-            "집단 극화 현상이 팬덤 문화와 마녀사냥에 미치는 영향"
+            "자율주행 자동차의 V2X(Vehicle to Everything) 통신 지연 시간 개선 방안",
+            "전고체 배터리(Solid-State Battery) 상용화를 위한 기술적 난제와 해결 전략",
+            "수소 연료 전지 자동차의 열관리 시스템 효율 향상을 위한 모델링 연구",
+            "모빌리티 서비스(MaaS) 도입에 따른 도심 교통 체계 변화 및 탄소 저감 효과",
+            "자율주행 알고리즘의 윤리적 판단 기준 설정을 위한 트롤리 딜레마 고찰",
+            "전기차 폐배터리 재활용(Recycle) 및 재사용(Reuse)의 경제성 및 환경성 분석"
         ],
-        "books": ["스키너의 심리상자 열기", "아내를 모자로 착각한 남자", "생각에 관한 생각", "프레임", "설득의 심리학"], 
-        "links": ["한국심리학회", "마인드포스트"]
+        "books": ["미래 자동차 모빌리티", "테슬라 쇼크", "모빌리티의 미래", "자율주행의 시대", "자동차 구조 교과서"],
+        "links": ["현대자동차 HMG저널", "한국자동차연구원"]
     },
-    "경영학과": {
+    "화학공학과": {
         "topics": [
-            "ESG 경영 도입이 기업의 장기적 재무 가치에 미치는 실증적 분석", 
-            "플랫폼 비즈니스 모델의 시장 독점 문제와 벤처 생태계 조성 방안", 
-            "행동경제학(넛지)을 적용한 긍정적 마케팅 및 소비 촉진 사례 연구",
-            "구독 경제(Subscription) 모델의 수익성 다각화 전략 및 한계점",
-            "엔터테인먼트 산업의 글로벌 마케팅 성공 요인과 현지화 전략",
-            "스타트업의 데스밸리(Death Valley) 극복을 위한 재무 및 조직 관리 전략"
+            "탄소 포집 및 활용 기술(CCUS)을 활용한 넷제로(Net Zero) 달성 시나리오 분석",
+            "폐플라스틱의 화학적 재활용(열분해) 공정 효율 향상을 위한 촉매 연구",
+            "그린 수소 생산을 위한 수전해 기술의 전해질 막 개선 및 경제성 평가",
+            "바이오매스 기반 친환경 폴리머 소재의 생분해성 및 물리적 특성 연구",
+            "2차 전지 양극재 조성 변화에 따른 에너지 밀도와 안정성 상관관계 분석",
+            "정밀 화학 공정에서의 AI 기반 공정 최적화 및 스마트 팩토리 설계 방안"
         ],
-        "books": ["경영의 실제", "마케팅 불변의 법칙", "트렌드 코리아", "블루오션 전략", "원씽(The One Thing)"], 
-        "links": ["삼성경제연구소(SERI)", "하버드 비즈니스 리뷰"]
-    },
-    "경제학과": {
-        "topics": [
-            "글로벌 인플레이션 억제를 위한 중앙은행 금리 정책의 딜레마 분석", 
-            "가상화폐(암호화폐)의 제도권 편입이 거시 경제에 미치는 영향", 
-            "공유 경제 플랫폼이 전통 산업 일자리에 미치는 경제적 파급 효과",
-            "기본소득 제도의 경제적 타당성과 근로 의욕 변화 모델링",
-            "보호무역주의 부활이 한국 수출 경제에 미치는 타격과 대응책",
-            "탄소 배출권 거래제의 경제적 실효성 및 시장 메커니즘 분석"
-        ],
-        "books": ["죽은 경제학자의 살아있는 아이디어", "괴짜 경제학", "자본주의", "넛지", "국부론"], 
-        "links": ["한국은행", "KDI 한국개발연구원"]
+        "books": ["화학으로 이루어진 세상", "부분과 전체", "엔트로피", "도구의 인간", "화학의 시대"],
+        "links": ["한국화학연구원", "대한화학회"]
     },
     "컴퓨터공학과": {
         "topics": [
-            "양자 컴퓨팅(Quantum Computing)의 원리와 기존 암호화 체계의 한계 탐구", 
-            "클라우드 컴퓨팅 환경에서의 개인정보 보안 최적화 및 분산 처리 방안", 
-            "오픈소스 생태계가 소프트웨어 산업 발전에 미치는 영향 및 기여 방안",
-            "블록체인을 활용한 전자 투표 시스템의 무결성 검증 및 한계점",
-            "엣지 컴퓨팅(Edge Computing)을 통한 자율주행 데이터 응답 속도 개선 사례",
-            "생체 인식 기술의 발전이 야기하는 프라이버시 침해 문제와 보안 모델"
+            "양자 컴퓨터(Quantum Computing) 알고리즘이 기존 암호 체계에 미치는 영향",
+            "마이크로서비스 아키텍처(MSA) 도입 시 데이터 일관성 유지 전략 연구",
+            "오픈소스 생태계 기여가 소프트웨어 산업의 기술 혁신에 미치는 파급 효과",
+            "엣지 컴퓨팅(Edge Computing)을 활용한 IoT 기기의 데이터 보안 강화 모델",
+            "블록체인 기반 탈중앙화 신원증명(DID) 기술의 보안성 및 확장성 분석",
+            "대규모 언어 모델(LLM)의 효율적 튜닝을 위한 파라미터 최적화 기법 연구"
         ],
-        "books": ["클린 코드", "컴퓨터 프로그램의 구조와 해석", "알고리즘 산책", "해커와 화가", "구글 엔지니어는 이렇게 일한다"], 
+        "books": ["클린 코드", "해커와 화가", "구글 엔지니어는 이렇게 일한다", "알고리즘 산책", "컴퓨터 프로그램의 구조와 해석"],
         "links": ["GitHub", "IEEE Computer Society"]
     },
     "인공지능(AI)학과": {
         "topics": [
-            "생성형 AI(LLM)의 할루시네이션(환각) 현상 원인 및 완화 알고리즘 탐구", 
-            "머신러닝 알고리즘에 내재된 데이터 편향성 문제와 공정성 확보 방안", 
-            "의료 영상 데이터를 활용한 딥러닝 기반 질병 조기 진단 모델 연구",
-            "자연어 처리(NLP)를 활용한 혐오 표현 탐지 및 감정 분석 모델 설계",
-            "강화학습을 적용한 스마트 시티 교통 제어 시스템 최적화 방안",
-            "딥페이크(Deepfake) 탐지 AI 모델의 원리와 기술적 한계 돌파 방안"
+            "생성형 AI의 할루시네이션(환각) 방지를 위한 RAG(검색 증강 생성) 기술 연구",
+            "설명 가능한 인공지능(XAI) 기법을 활용한 딥러닝 모델의 신뢰성 검증",
+            "연합 학습(Federated Learning)을 통한 개인정보 보호형 분산 AI 모델 설계",
+            "멀티모달(Multimodal) 학습 기반 시각-언어 데이터 융합 및 분석 최적화",
+            "인공지능 알고리즘의 편향성 제거를 위한 데이터셋 구축 가이드라인 설계",
+            "강화학습을 활용한 지능형 로봇의 장애물 회피 및 동적 경로 계획 연구"
         ],
-        "books": ["인공지능의 시대", "딥러닝 혁명", "AI 마인드", "수학으로 풀어보는 인공지능", "인공지능과 뇌"], 
+        "books": ["인공지능의 시대", "딥러닝 혁명", "AI 마인드", "수학으로 풀어보는 인공지능", "가장 인간적인 인간"],
         "links": ["AI Hub", "한국인공지능학회"]
     },
-    "생명과학과": {
+    "신소재공학과": {
         "topics": [
-            "유전자 가위(CRISPR-Cas9) 기술의 임상 적용 한계와 생명 윤리적 쟁점", 
-            "미세 플라스틱이 해양 생태계 먹이사슬을 거쳐 인체에 미치는 면역학적 영향", 
-            "mRNA 백신의 항원 발현 원리와 차세대 RNA 표적 치료제 전망",
-            "마이크로바이옴(장내 미생물)이 인간의 면역 및 신경계에 미치는 영향",
-            "합성 생물학을 이용한 인공 세포 제작의 현주소와 윤리적 딜레마",
-            "기후 변화가 유발하는 식물 병해충 확산 메커니즘과 식량 안보"
+            "그래핀 기반 나노 복합 소재의 전자파 차폐 효율 및 강도 개선 연구",
+            "형상 기억 합금을 활용한 우주 항공 및 의료용 스마트 부품 설계 방안",
+            "탄소 나노튜브(CNT)를 적용한 차세대 유연 디스플레이 소자 특성 분석",
+            "페로브스카이트 태양전지의 효율 향상과 장기 안정성 확보를 위한 소재 연구",
+            "바이오 세라믹 소재를 활용한 인공 뼈 지지체(Scaffold)의 생체 적합성 연구",
+            "극저온 환경에서의 고온 초전도체 특성 분석 및 자기 부상 기술 응용"
         ],
-        "books": ["이기적 유전자", "침묵의 봄", "생명과학, 신에게 도전하다", "코스모스", "바이오해커가 온다"], 
+        "books": ["사소한 것들의 과학", "신소재의 발견", "재료과학과 공학", "강함의 부드러움", "엔지니어의 시각"],
+        "links": ["한국재료연구원", "KCI 학술지"]
+    },
+    "생명공학과": {
+        "topics": [
+            "3D 바이오 프린팅 기술을 활용한 맞춤형 인공 장기 제작의 현주소와 과제",
+            "개인 맞춤형 정밀 의료를 위한 NGS(차세대 염기서열 분석) 데이터 활용 방안",
+            "유전자 가위(CRISPR) 기술을 이용한 희귀 유전 질환 치료의 윤리적 쟁점",
+            "합성 생물학을 활용한 미생물 기반 친환경 단백질 소재 생산 공정 최적화",
+            "줄기세포 유도 기술을 이용한 퇴행성 뇌 질환 치료 기전 분석 및 연구",
+            "디지털 트윈 기반 생체 모델링을 활용한 신약 후보 물질의 독성 예측 연구"
+        ],
+        "books": ["이기적 유전자", "생명과학, 신에게 도전하다", "바이오해커가 온다", "숨결이 바람 될 때", "호모 데우스"],
         "links": ["생물학연구정보센터(BRIC)", "기초과학연구원(IBS)"]
     },
-    "의예과": {
+    "에너지공학과": {
         "topics": [
-            "디지털 치료제(DTx)의 임상적 유효성 검증과 제도적 한계 분석", 
-            "인공지능(AI) 기반 신약 개발 가속화가 제약 산업에 미치는 파급 효과", 
-            "초고령 사회 대비 지역 간 의료 인프라 격차 해소를 위한 공공 의료 모델 제안",
-            "수면 부족이 청소년의 뇌 인지 기능 및 발달에 미치는 의학적 분석",
-            "항암제 내성 발생 원인과 다제내성 극복을 위한 표적 치료 방안",
-            "플라시보 효과의 뇌신경학적 메커니즘 및 임상 적용의 윤리성 연구"
+            "소형 모듈 원자로(SMR)의 안전성 및 경제성 분석과 분산 전원 활용 방안",
+            "핵융합 에너지 실현을 위한 초고온 플라즈마 제어 기술의 물리적 원리 탐구",
+            "VPP(가상 발전소) 시스템 도입에 따른 재생 에너지 출력 변동성 보완 대책",
+            "해상 풍력 발전기의 구조적 안정성 확보를 위한 부유식 구조물 설계 연구",
+            "차세대 수소 저장 합금을 이용한 에너지 저장 밀도 및 안전성 향상 연구",
+            "스마트 그리드 환경에서의 수요 자원(DR) 관리 알고리즘 및 전력 시장 분석"
         ],
-        "books": ["숨결이 바람 될 때", "의학의 역사", "아프다, 의사도", "질병의 탄생", "아내를 모자로 착각한 남자"], 
-        "links": ["대한의학회", "PubMed"]
+        "books": ["엔트로피", "지속 가능한 에너지", "석유 이후의 세계", "원자력의 진실", "에너지 혁명"],
+        "links": ["에너지경제연구원", "한국에너지공단"]
+    },
+    "산업공학과": {
+        "topics": [
+            "디지털 트윈(Digital Twin) 기술을 적용한 물류 센터 내 운영 효율 최적화",
+            "공급망 관리(SCM)에서의 블록체인 도입이 물류 가시성 및 보안에 미치는 영향",
+            "서비스 공학 관점에서의 사용자 경험(UX) 개선을 위한 행동 데이터 분석",
+            "제조 현장의 안전 관리를 위한 컴퓨터 비전 기반 실시간 이상 징후 탐지",
+            "복잡한 시스템 의사결정을 위한 강화학습 기반 시뮬레이션 모델 설계 연구",
+            "생산 계획 및 재고 관리 최적화를 위한 린(Lean) 시스템과 AI 결합 사례"
+        ],
+        "books": ["경영의 실제", "린 스타트업", "시스템 사고", "생각에 관한 생각", "최적화의 기술"],
+        "links": ["대한산업공학회", "산업연구원"]
     }
 }
 
-# --- 📚 [계열별 공통 DB] 세부 학과가 없을 때 방어용 (마찬가지로 확장) ---
+# --- 📚 [계열별 공통 DB] 데이터 보강 ---
 TRACK_DB = {
     "인문계열": {
         "topics": ["언어 매체에 나타난 사회적 편견 요소 분석", "고전 문학의 현대적 재해석을 통한 인문학적 가치 탐구", "디지털 인문학: 빅데이터를 활용한 문학 양식 변화 분석", "다문화 시대의 역사 인식의 변화", "철학적 관점에서 본 기술 만능주의 비판"], 
@@ -145,14 +157,14 @@ def show_offline_result(track, target_name, selected_act, custom_title, act_type
     try:
         selected_topics = random.sample(data['topics'], 3)
     except:
-        selected_topics = data['topics'][:3] # 혹시 주제가 3개 미만일 경우를 대비한 안전장치
+        selected_topics = data['topics'][:3]
         
     try:
         selected_books = random.sample(data['books'], 2)
     except:
         selected_books = data['books'][:2]
 
-    # 💡 3. 활동 팁(조언) 역시 고정되지 않게 3가지 버전 중 하나를 랜덤 출력!
+    # 💡 3. 활동 팁(조언) 역시 3가지 버전 중 하나를 랜덤 출력!
     lead_advices = [
         f"선택하신 **[{selected_act}]**은 스스로 기획하고 탐구하는 **학생 주도형 활동**입니다. 위의 주제 중 하나를 선택해 본인만의 가설을 세우고, 자료 조사부터 결론 도출까지의 과정을 생기부에 구체적으로 녹여내세요.",
         f"**[{selected_act}]** 활동의 핵심은 '자기주도성'입니다. 제시된 탐구 주제를 바탕으로 스스로 질문을 던지고, 전공 지식을 활용해 문제 해결 과정을 생기부에 깊이 있게 서술해 보세요.",
@@ -165,12 +177,8 @@ def show_offline_result(track, target_name, selected_act, custom_title, act_type
         f"주어진 내용을 그대로 받아들이지 말고, **[{selected_act}]**에서 배운 점을 비판적으로 수용하세요. 위 주제를 바탕으로 RISS 등에서 관련 논문을 찾아 읽고 전공 지식을 능동적으로 확장하는 후속 활동이 필수적입니다."
     ]
 
-    if act_type == "주도형":
-        act_advice = random.choice(lead_advices)
-    else:
-        act_advice = random.choice(passive_advices)
+    act_advice = random.choice(lead_advices if act_type == "주도형" else passive_advices)
 
-    # 4. 화면 출력용 마크다운 텍스트 조립
     offline_md = f"""
     ### 💡 1. [{target_name}] 맞춤형 심층 탐구 주제 제안 (랜덤 셔플)
     * **[주제 1]** {selected_topics[0]}
@@ -191,7 +199,6 @@ def show_offline_result(track, target_name, selected_act, custom_title, act_type
     * 진로와 연관된 **국가 연구소 (예: KDI, KIST, STEPI 등)** 홈페이지의 최신 연구 동향(Press Release) 확인 및 {data['links'][0]} 참조
     """
     
-    # 💡 선생님의 완벽한 핑크/그린/오렌지 원본 디자인 그대로 유지!
     st.markdown(f"""
     <div class="result-box" style="background-color: #F8FAFC; border: 3px solid #10B981; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
         <h2 style="color: #059669; margin-top: 0; text-align: center; border-bottom: 2px dashed #34D399; padding-bottom: 20px; margin-bottom: 30px;">
@@ -214,21 +221,16 @@ def show_offline_result(track, target_name, selected_act, custom_title, act_type
 
 
 # ==========================================
-# 메인 프로그램 UI (디자인 변경 없음!)
+# 메인 프로그램 UI
 # ==========================================
 
-# 1. 페이지 설정
 st.set_page_config(page_title="양명여고 학생부 설계기", page_icon="📋", layout="wide")
 
-# 2. 에러 원천 차단형 안전 CSS (선생님 원본 디자인 100% 유지)
 st.markdown("""
 <style>
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
-    
     div.row-widget.stRadio > div { flex-direction: column; gap: 10px; }
-
-    /* 🏠 홈 버튼 스타일 (Secondary Button) */
     div.stButton > button[kind="secondary"] {
         background-color: #FFFFFF !important; color: #FF1493 !important;
         border: 2px solid #FFC0CB !important; border-radius: 10px !important;
@@ -239,38 +241,20 @@ st.markdown("""
     div.stButton > button[kind="secondary"]:hover {
         background-color: #FFF0F5 !important; border-color: #FF1493 !important; transform: translateY(-2px) !important;
     }
-
-    /* 🚀 AI 분석 메인 버튼 스타일 (Primary Button) */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #FF69B4 0%, #FFA500 100%) !important;
         color: white !important; border: none !important; border-radius: 15px !important;
         font-weight: 900 !important; font-size: 1.4rem !important; padding: 15px 0 !important;
         box-shadow: 0 6px 15px rgba(255, 105, 180, 0.4) !important; transition: all 0.3s ease !important;
-        width: 100%;
-        margin-top: 15px !important;
+        width: 100%; margin-top: 15px !important;
     }
     div.stButton > button[kind="primary"]:hover {
         transform: translateY(-5px) !important; box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5) !important;
         background: linear-gradient(135deg, #FFA500 0%, #FF1493 100%) !important;
     }
-
-    /* ✨ 입력창 오렌지 테두리 강조 CSS */
     div[data-baseweb="input"] > div {
-        border: 2.5px solid #FF8C00 !important;
-        background-color: #FFFDF5 !important;
-        border-radius: 10px !important;
+        border: 2.5px solid #FF8C00 !important; background-color: #FFFDF5 !important; border-radius: 10px !important;
     }
-    div[data-baseweb="input"] > div:focus-within {
-        border-color: #FF1493 !important;
-        box-shadow: 0 0 10px rgba(255, 20, 147, 0.3) !important;
-    }
-
-    @media print {
-        header, [data-testid="stSidebar"], .stButton, .stRadio, h1, p { display: none !important; } 
-        .stApp { background-color: white !important; }
-        .result-box { box-shadow: none !important; border: 1px solid #ccc !important; }
-    }
-
     @media (max-width: 768px) {
         h1.main-title { font-size: 2rem !important; line-height: 1.3 !important; }
         p.sub-title { font-size: 1rem !important; margin-top: 5px !important; }
@@ -290,25 +274,25 @@ with st.sidebar:
     else: st.warning("⚠️ 학교 오프라인 DB 모드 동작 중")
     st.markdown("💖 **양명여자고등학교 진로진학부**")
 
-# 홈 버튼 (Secondary 타입으로 설정하여 위 CSS 적용)
 if st.button("🏠 메인 화면으로 가기", type="secondary"): 
     st.switch_page("app.py")
 
 st.markdown("""
 <div style='text-align: center; padding-bottom: 20px;'>
     <h1 class='main-title' style='color: #FF1493; font-weight: 900; font-size: 3.5rem;'>🤖 실시간 학생부 AI 설계기</h1>
-    <p class='sub-title' style='color: #64748B; font-size: 1.2rem; margin-top: 10px;'>계열과 학과를 선택하면 맞춤 활동을 추천하고, <b>구체적인 활동 전개 방법과 추천 문헌</b>을 짜드립니다.</p>
+    <p class='sub-title' style='color: #64748B; font-size: 1.2rem; margin-top: 10px;'>학과를 선택하면 맞춤 활동을 추천하고, <b>구체적인 활동 전개 방법과 추천 문헌</b>을 짜드립니다.</p>
 </div>
 """, unsafe_allow_html=True)
 
+# 💡 학과 리스트를 대폭 확장 (공학계열 세분화 및 반도체 추가)
 career_data = {
-    "인문계열": ["계열 전반 (특정 학과 미정)", "국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과"],
-    "사회계열": ["계열 전반 (특정 학과 미정)", "경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과"],
-    "교육계열": ["계열 전반 (특정 학과 미정)", "초등교육과", "국어교육과", "수학교육과", "영어교육과"],
-    "공학계열": ["계열 전반 (특정 학과 미정)", "컴퓨터공학과", "인공지능(AI)학과", "기계공학과", "전기전자공학과", "화학공학과"],
-    "자연계열": ["계열 전반 (특정 학과 미정)", "수학과", "물리학과", "화학과", "생명과학과", "환경과학과"],
-    "의약계열": ["계열 전반 (특정 학과 미정)", "의예과", "치의예과", "약학과", "간호학과", "수의예과"],
-    "예체능계열": ["계열 전반 (특정 학과 미정)", "디자인학과", "회화과", "체육학과", "연극영화과"]
+    "인문계열": ["계열 전반 (특정 학과 미정)", "국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과", "중어중문학과", "일어일문학과", "문헌정보학과"],
+    "사회계열": ["계열 전반 (특정 학과 미정)", "경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과", "국제통상학과", "관광학과"],
+    "교육계열": ["계열 전반 (특정 학과 미정)", "초등교육과", "국어교육과", "수학교육과", "영어교육과", "역사교육과", "유아교육과", "특수교육과"],
+    "공학계열": ["계열 전반 (특정 학과 미정)", "컴퓨터공학과", "인공지능(AI)학과", "반도체공학과", "신소재공학과", "기계공학과", "전기전자공학과", "화학공학과", "에너지공학과", "미래자동차공학과", "산업공학과", "건축공학과", "항공우주공학과", "생명공학과", "환경공학과"],
+    "자연계열": ["계열 전반 (특정 학과 미정)", "수학과", "물리학과", "화학과", "생명과학과", "환경과학과", "지구환경과학과", "통계학과", "천문우주학과"],
+    "의약계열": ["계열 전반 (특정 학과 미정)", "의예과", "치의예과", "약학과", "간호학과", "수의예과", "물리치료학과", "임상병리학과"],
+    "예체능계열": ["계열 전반 (특정 학과 미정)", "디자인학과", "시각디자인학과", "회화과", "음악학과", "체육학과", "연극영화과", "무용과", "스포츠산업학과"]
 }
 
 activities_db = {
@@ -329,114 +313,43 @@ recommended_activities = {
     "예체능계열": ["드림업 프로젝트", "스마트폰 이별주간 캠페인", "전문직업인 초청 특강"]
 }
 
-# --- STEP 1 ---
-st.markdown("""
-<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; box-shadow: 0 4px 10px rgba(255, 105, 180, 0.05); margin-bottom: 20px;'>
-    <h3 style='color: #FF1493; margin: 0; padding-bottom: 5px;'>📝 STEP 1. 계열 및 학과 선택</h3>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; margin-bottom: 20px;'><h3 style='color: #FF1493; margin: 0;'>📝 STEP 1. 계열 및 학과 선택</h3></div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1: selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
 with col2: selected_major = st.selectbox("🎓 세부 학과", career_data[selected_track])
 
 target_name = selected_major if selected_major != "계열 전반 (특정 학과 미정)" else f"{selected_track} 전반"
 
-# --- STEP 2 ---
-st.markdown("""
-<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; box-shadow: 0 4px 10px rgba(255, 105, 180, 0.05); margin-top: 30px; margin-bottom: 20px;'>
-    <h3 style='color: #FF1493; margin: 0; padding-bottom: 5px;'>🎯 STEP 2. 활동 선택 (추천/기타)</h3>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; margin-top: 30px; margin-bottom: 20px;'><h3 style='color: #FF1493; margin: 0;'>🎯 STEP 2. 활동 선택</h3></div>", unsafe_allow_html=True)
 recs = recommended_activities[selected_track]
 all_activities = list(activities_db.keys())
-
-display_options = []
-for act in recs: display_options.append(f"🌟 [전공 추천] {act}")
-for act in all_activities:
-    if act not in recs:
-        if act == "창의융합 주제탐구 프로젝트": display_options.append(f"▶ [다른 활동] {act} (🎓3학년 전용)")
-        else: display_options.append(f"▶ [다른 활동] {act}")
-
+display_options = [f"🌟 [전공 추천] {act}" for act in recs] + [f"▶ [다른 활동] {act}" for act in all_activities if act not in recs]
 selected_act_display = st.radio("활동 목록", display_options, label_visibility="collapsed")
-selected_act = selected_act_display.split("] ")[1].replace(" (🎓3학년 전용)", "")
+selected_act = selected_act_display.split("] ")[1]
 act_type = activities_db.get(selected_act, "주도형")
 
-# --- STEP 3 ---
-st.markdown(f"""
-<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; box-shadow: 0 4px 10px rgba(255, 105, 180, 0.05); margin-top: 30px; margin-bottom: 20px;'>
-    <h3 style='color: #FF1493; margin: 0; padding-bottom: 5px;'>🔍 STEP 3. 세부 정보 입력 ({act_type})</h3>
-</div>
-""", unsafe_allow_html=True)
-
-custom_title = ""
-if act_type == "비주도형":
-    st.warning("이 활동은 강연 청취나 정해진 실습을 수행하는 **[비주도형/강의형]** 활동입니다. 강연 후 심화 후속 활동 방향을 알려드립니다.")
-    custom_title = st.text_input("✏️ 수강/참가한 강의/특강/실습의 제목을 입력해 주세요 (필수)", placeholder="예: 화학, AI 윤리, 분광기 실습")
-else:
-    st.success("이 활동은 스스로 탐구하는 **[학생 주도형]** 활동입니다. 기획하고 실행하는 가이드를 제공합니다.")
-    custom_title = st.text_input("💡 (선택) 특별히 다루고 싶은 관심 주제나 읽고 있는 책이 있다면 적어주세요.")
+st.markdown(f"<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; margin-top: 30px; margin-bottom: 20px;'><h3 style='color: #FF1493; margin: 0;'>🔍 STEP 3. 정보 입력 ({act_type})</h3></div>", unsafe_allow_html=True)
+if act_type == "비주도형": custom_title = st.text_input("✏️ 수강/참가한 강의/특강/실습의 제목을 입력해 주세요 (필수)", placeholder="예: 반도체 공정 특강, 자율주행 알고리즘 실습")
+else: custom_title = st.text_input("💡 (선택) 특별히 다루고 싶은 관심 주제나 읽고 있는 책이 있다면 적어주세요.")
 
 st.write("---")
-engine_choice = st.radio(
-    "💡 분석 엔진 선택", 
-    ["✨ 제미나이 AI 실시간 분석 (추천/창의적안)", "📚 학교 자체 데이터베이스 (빠름/안정적)"], 
-    horizontal=True
-)
+engine_choice = st.radio("💡 분석 엔진 선택", ["✨ 제미나이 AI 실시간 분석 (추천)", "📚 학교 자체 데이터베이스 (안정적/빠름)"], horizontal=True)
 
-# 분석 버튼 (Primary 타입으로 설정하여 위 CSS 적용)
-gemini_btn = st.button("🚀 선택한 엔진으로 활동 가이드 생성", type="primary", use_container_width=True)
-st.write("---")
-
-if gemini_btn:
-    if act_type == "비주도형" and not custom_title: 
-        st.warning("⚠️ 강의/실습 제목을 반드시 입력해 주셔야 맞춤형 가이드가 나옵니다.")
+if st.button("🚀 활동 가이드 생성", type="primary"):
+    if act_type == "비주도형" and not custom_title: st.warning("⚠️ 강의/실습 제목을 반드시 입력해 주세요.")
+    elif "학교 자체" in engine_choice: show_offline_result(selected_track, target_name, selected_act, custom_title, act_type)
     else:
-        if "학교 자체" in engine_choice:
-            st.success("✅ 학교 자체 데이터베이스 엔진으로 신속하게 결과를 생성했습니다!")
-            show_offline_result(selected_track, target_name, selected_act, custom_title, act_type)
-            
+        if not api_key: show_offline_result(selected_track, target_name, selected_act, custom_title, act_type)
         else:
-            if not api_key:
-                st.warning("⏳ AI 서버 키가 설정되지 않아 **[학교 자체 데이터베이스]** 모드로 자동 전환합니다!")
+            try:
+                with st.spinner(f"🌐 제미나이 AI가 '{target_name}' 진로에 맞춰 설계 중..."):
+                    genai.configure(api_key=api_key)
+                    model = genai.GenerativeModel(get_best_model(api_key))
+                    prompt = f"진로: {target_name}, 활동: {selected_act} ({act_type}), 주제: {custom_title}. 생기부 예시안 출력 금지. 1.탐구주제 3개 2.활동팁 3.참고문헌 4.추천웹사이트 형식으로 작성."
+                    response = model.generate_content(prompt)
+                    st.success("✅ AI 설계 완료!")
+                    st.markdown(f'<div class="result-box" style="background:white; border:3px solid #FFA500; border-radius:20px; padding:30px;"><h2 style="color: #CA8A04; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">🎯 {target_name} 맞춤형 활동 솔루션 (AI)</h2><div style="font-size: 1.1rem; line-height: 1.8; color: #333;">{response.text}</div></div>', unsafe_allow_html=True)
+                    components.html("""<script>function printResult() { try { window.parent.print(); } catch (e) { window.print(); } }</script><div style="text-align: center; margin-top: 20px;"><button onclick="printResult()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">🖨️ 결과 화면 PDF 출력</button></div>""", height=100)
+            except Exception as e:
+                st.warning("⏳ AI 서버 과부하로 학교 자체 데이터베이스로 자동 전환합니다!")
                 show_offline_result(selected_track, target_name, selected_act, custom_title, act_type)
-            else:
-                prompt = f"""
-                당신은 고등학교 진로진학 전문 교사입니다.
-                - 진로/학과: {target_name}
-                - 활동: {selected_act} ({act_type})
-                - 관심사/주제: {custom_title if custom_title else '자유 제안'}
-                
-                이 학생이 '{target_name}' 진학을 위해 이 활동을 어떻게 기획/실행/후속 심화할지 가이드라인을 작성하세요.
-                주의: 생기부 기록 예시안은 절대 출력하지 마세요.
-                
-                양식:
-                ### 💡 1. [{target_name}] 맞춤형 탐구 주제 제안 (2가지)
-                ### 📚 2. 탐구를 위한 구체적인 활동 전개 팁
-                ### 📖 3. 심화 탐구를 위한 추천 참고 문헌 (책 2권 및 RISS 키워드)
-                ### 🔗 4. [{target_name}] 전공 탐색 추천 웹사이트
-                """
-                try:
-                    with st.spinner(f"🌐 제미나이 AI가 실시간으로 가이드를 창작 중입니다..."):
-                        chosen_model = get_best_model(api_key)
-                        model = genai.GenerativeModel(chosen_model)
-                        response = model.generate_content(prompt)
-                        
-                        st.success(f"✅ 제미나이 AI가 창의적 설계를 완료했습니다! (모델: {chosen_model})")
-                        st.markdown(f"""
-                        <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
-                            <h2 style="color: #CA8A04; margin-top: 0; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">
-                                🎯 {target_name} 맞춤형 활동 솔루션 (AI)
-                            </h2>
-                            <div style="font-size: 1.1rem; line-height: 1.8; color: #333;">{response.text}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        components.html("""<script>function printResult() { try { window.parent.print(); } catch (e) { window.print(); } }</script><div style="text-align: center; margin-top: 20px;"><button onclick="printResult()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">🖨️ 결과 화면 PDF 출력</button></div>""", height=100)
-
-                except Exception as e:
-                    error_msg = str(e).lower()
-                    if "429" in error_msg or "quota" in error_msg or "exhausted" in error_msg:
-                        st.warning("⏳ 현재 다른 친구들이 AI를 많이 사용 중입니다. **[학교 자체 데이터베이스]** 모드로 즉시 전환하여 결과를 보여드립니다! 💖")
-                        show_offline_result(selected_track, target_name, selected_act, custom_title, act_type)
-                    else:
-                        st.error("🚨 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
