@@ -95,37 +95,37 @@ def show_offline_result(track, major, act_name, title):
     """
     
     st.markdown(f"""
-    <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #10B981; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-        <h2 style="color: #059669; margin-top: 0; text-align: center; border-bottom: 2px dashed #34D399; padding-bottom: 20px; margin-bottom: 30px;">
+    <div class="result-box" style="background-color: #FFFFFF; border: 3px solid #FFA500; border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <h2 style="color: #CA8A04; margin-top: 0; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">
             📚 {target} 활동 솔루션 (학교 자체 DB)
         </h2>
         <div style="font-size: 1.1rem; line-height: 1.8; color: #1E293B;">{offline_md}</div>
     </div>
     """, unsafe_allow_html=True)
     
-    components.html("""<script>function printResult() { try { window.parent.print(); } catch (e) { window.print(); } }</script><div style="text-align: center; margin-top: 20px;"><button onclick="printResult()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(16,185, 129, 0.3);">🖨️ 결과 화면 PDF 출력</button></div>""", height=100)
+    components.html("""<script>function printResult() { try { window.parent.print(); } catch (e) { window.print(); } }</script><div style="text-align: center; margin-top: 20px;"><button onclick="printResult()" style="background: linear-gradient(135deg, #FF69B4, #FFA500); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(255,105, 180, 0.3);">🖨️ 결과 화면 PDF 출력</button></div>""", height=100)
 
 # 1. 페이지 설정
-st.set_page_config(page_title="서울고 학생부 설계기", page_icon="🏫", layout="wide")
+st.set_page_config(page_title="양명여고 학생부 설계기", page_icon="📋", layout="wide")
 
-# 2. 디자인 CSS (신뢰감을 주는 화이트/블루/그린 톤 테마 적용)
+# 2. 디자인 CSS (화사한 핑크/옐로우/오렌지 양명여고 전용 테마 복구)
 st.markdown("""
 <style>
-    .stApp { background-color: #F4F6F9; } 
-    [data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 2px solid #3B82F6; } 
+    .stApp { background-color: #FFF5F7; } 
+    [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     div.row-widget.stRadio > div { flex-direction: column; gap: 10px; }
     
-    /* 서브 버튼 */
-    div.stButton > button[kind="secondary"] { background-color: white !important; color: #2563EB !important; border: 2px solid #BFDBFE !important; border-radius: 10px !important; font-weight: 800; padding: 5px 20px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.1); }
-    div.stButton > button[kind="secondary"]:hover { background-color: #EFF6FF !important; border-color: #3B82F6 !important; transform: translateY(-2px); }
+    /* 서브 버튼 (홈 가기 등) */
+    div.stButton > button[kind="secondary"] { background-color: white !important; color: #FF1493 !important; border: 2px solid #FFC0CB !important; border-radius: 10px !important; font-weight: 800; padding: 5px 20px; box-shadow: 0 2px 5px rgba(255, 105, 180, 0.1); }
+    div.stButton > button[kind="secondary"]:hover { background-color: #FFF0F5 !important; border-color: #FF1493 !important; transform: translateY(-2px); }
     
     /* 메인 분석 버튼 */
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563EB 0%, #10B981 100%) !important; color: white !important; border: none !important; border-radius: 15px !important; font-weight: 900; font-size: 1.3rem; padding: 12px 0; width: 100%; margin-top: 15px; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3); }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); background: linear-gradient(135deg, #1D4ED8 0%, #059669 100%) !important; }
+    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #FF69B4 0%, #FFA500 100%) !important; color: white !important; border: none !important; border-radius: 15px !important; font-weight: 900; font-size: 1.3rem; padding: 12px 0; width: 100%; margin-top: 15px; box-shadow: 0 6px 15px rgba(255, 105, 180, 0.4); }
+    div.stButton > button[kind="primary"]:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5); background: linear-gradient(135deg, #FFA500 0%, #FF1493 100%) !important; }
     
-    /* 입력창 블루/그린 포인트 */
-    div[data-baseweb="input"] > div { border: 2.5px solid #60A5FA !important; background-color: #FFFFFF !important; border-radius: 10px !important; }
-    div[data-baseweb="input"] > div:focus-within { border-color: #10B981 !important; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important; }
+    /* 입력창 오렌지 포인트 */
+    div[data-baseweb="input"] > div { border: 2.5px solid #FF8C00 !important; background-color: #FFFDF5 !important; border-radius: 10px !important; }
+    div[data-baseweb="input"] > div:focus-within { border-color: #FF1493 !important; box-shadow: 0 0 10px rgba(255, 20, 147, 0.3) !important; }
 
     @media print {
         header, [data-testid="stSidebar"], .stButton, .stRadio, h1, p { display: none !important; } 
@@ -143,13 +143,13 @@ with st.sidebar:
     st.markdown("### 🤖 시스템 연결 상태")
     if api_key: st.success("✅ AI 서버 연결 정상!")
     else: st.warning("⚠️ 오프라인 DB 모드 동작 중")
-    st.markdown("🏫 **서울고등학교 진로진학부**\n\n*(Made by 서울고 남학생)*")
+    st.markdown("💖 **양명여자고등학교 진로진학부**")
 
 if st.button("🏠 메인 화면으로 가기", type="secondary"): st.switch_page("app.py")
 
-st.markdown("""<div style='text-align: center; padding-bottom: 20px;'><h1 class='main-title' style='color: #1D4ED8; font-weight: 900; font-size: 3.5rem;'>🤖 서울고 학생부 AI 설계기</h1><p style='color: #475569; font-size: 1.2rem;'>세부 학과를 선택하면 <b>3가지 이상의 심층 탐구 주제와 문헌</b>을 실시간으로 설계합니다.</p></div>""", unsafe_allow_html=True)
+st.markdown("""<div style='text-align: center; padding-bottom: 20px;'><h1 class='main-title' style='color: #FF1493; font-weight: 900; font-size: 3.5rem;'>🤖 실시간 학생부 AI 설계기</h1><p style='color: #64748B; font-size: 1.2rem;'>세부 학과를 선택하면 <b>3가지 이상의 심층 탐구 주제와 문헌</b>을 실시간으로 설계합니다.</p></div>""", unsafe_allow_html=True)
 
-# 💡 학과 리스트 확장
+# 💡 학과 리스트 유지
 career_data = {
     "인문계열": ["계열 전반 (특정 학과 미정)", "국어국문학과", "영어영문학과", "사학과", "철학과", "심리학과", "중어중문학과", "일어일문학과", "문화인류학과", "언어학과", "문헌정보학과"],
     "사회계열": ["계열 전반 (특정 학과 미정)", "경영학과", "경제학과", "정치외교학과", "사회복지학과", "미디어커뮤니케이션학과", "행정학과", "국제통상학과", "회계학과", "관광학과", "사회학과", "도시행정학과"],
@@ -168,17 +168,17 @@ activities_db = {
     "이공계 진로캠프 (야간 천체 관측)": "비주도형", "금융 리터러시 아카데미": "비주도형"
 }
 
-st.markdown("<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #BFDBFE; margin-bottom: 20px;'><h3 style='color: #2563EB; margin: 0;'>📝 STEP 1. 계열 및 학과 선택</h3></div>", unsafe_allow_html=True)
+st.markdown("<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; margin-bottom: 20px;'><h3 style='color: #FF1493; margin: 0;'>📝 STEP 1. 계열 및 학과 선택</h3></div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1: selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
 with col2: selected_major = st.selectbox("🎓 세부 학과", career_data[selected_track])
 
-st.markdown("<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #BFDBFE; margin-top: 20px; margin-bottom: 15px;'><h3 style='color: #2563EB; margin: 0;'>🎯 STEP 2. 활동 선택</h3></div>", unsafe_allow_html=True)
+st.markdown("<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; margin-top: 20px; margin-bottom: 15px;'><h3 style='color: #FF1493; margin: 0;'>🎯 STEP 2. 활동 선택</h3></div>", unsafe_allow_html=True)
 recs = ["드림업 프로젝트", "독서탐구", "창의융합 주제탐구 프로젝트", "전문직업인 초청 특강", "학생주도 프로젝트 봉사활동", "이음 책모임", "환경인문독서토론", "스마트폰 이별주간 캠페인", "과천 과학관 실습 프로그램", "금융 리터러시 아카데미"]
 selected_act = st.radio("활동 선택", recs, label_visibility="collapsed")
 act_type = activities_db.get(selected_act, "주도형")
 
-st.markdown(f"<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #BFDBFE; margin-top: 20px; margin-bottom: 15px;'><h3 style='color: #2563EB; margin: 0;'>🔍 STEP 3. 정보 입력 ({act_type})</h3></div>", unsafe_allow_html=True)
+st.markdown(f"<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; margin-top: 20px; margin-bottom: 15px;'><h3 style='color: #FF1493; margin: 0;'>🔍 STEP 3. 정보 입력 ({act_type})</h3></div>", unsafe_allow_html=True)
 target_name = selected_major if selected_major != "계열 전반 (특정 학과 미정)" else f"{selected_track} 전반"
 
 if act_type == "비주도형": custom_title = st.text_input("✏️ 강연/실습 제목 입력 (필수)", placeholder="예: 빅데이터 특강")
@@ -199,5 +199,5 @@ if st.button("🚀 활동 가이드 생성", type="primary"):
                     prompt = f"진로: {target_name}, 활동: {selected_act}, 주제: {custom_title}. 생기부 예시는 쓰지 말고, 1.[{target_name}] 맞춤형 탐구 주제 제안(최소 3가지 이상 상세히) 2.활동팁 3.참고문헌 4.추천웹사이트 형식으로 작성."
                     response = model.generate_content(prompt)
                     st.success("✅ AI 설계 완료!")
-                    st.markdown(f'<div class="result-box" style="background:white; border:3px solid #3B82F6; border-radius:20px; padding:30px;"><h2 style="color: #1D4ED8; text-align: center; border-bottom: 2px dashed #93C5FD; padding-bottom: 20px; margin-bottom: 30px;">🎯 {target_name} 맞춤형 활동 솔루션 (AI)</h2>{response.text}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="result-box" style="background:white; border:3px solid #FFA500; border-radius:20px; padding:30px;"><h2 style="color: #CA8A04; text-align: center; border-bottom: 2px dashed #FFD700; padding-bottom: 20px; margin-bottom: 30px;">🎯 {target_name} 맞춤형 활동 솔루션 (AI)</h2>{response.text}</div>', unsafe_allow_html=True)
             except: show_offline_result(selected_track, selected_major, selected_act, custom_title)
