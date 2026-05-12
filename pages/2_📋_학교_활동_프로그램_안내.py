@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import streamlit.components.v1 as components
 
-# --- 💡 404 에러 & 과부하 방지용 스마트 캐시 함수 ---
+# --- 💡 스마트 캐시 함수 ---
 @st.cache_data(ttl=3600)
 def get_best_model(api_key):
     try:
@@ -15,7 +15,7 @@ def get_best_model(api_key):
     except:
         return "gemini-1.5-flash"
 
-# --- 📚 학교 자체 오프라인 DB 출력 함수 (에러 방어용) ---
+# --- 📚 학교 자체 오프라인 DB 출력 함수 ---
 def show_offline_result(target_name, selected_act, custom_title):
     custom_text = custom_title if custom_title else "관련 심화 주제"
     
@@ -61,36 +61,36 @@ def show_offline_result(target_name, selected_act, custom_title):
 # 1. 페이지 설정
 st.set_page_config(page_title="양명여고 학생부 설계기", page_icon="📋", layout="wide")
 
-# 2. 테마 CSS (오렌지 테두리 강조 추가)
+# 2. 에러 원천 차단형 안전 CSS
 st.markdown("""
 <style>
     .stApp { background-color: #FFF5F7; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     
-    .home-btn > button {
+    div.row-widget.stRadio > div { flex-direction: column; gap: 10px; }
+
+    /* 🏠 홈 버튼 스타일 (Secondary Button) */
+    div.stButton > button[kind="secondary"] {
         background-color: #FFFFFF !important; color: #FF1493 !important;
         border: 2px solid #FFC0CB !important; border-radius: 10px !important;
         font-weight: 800 !important; padding: 5px 20px !important;
         transition: all 0.3s ease !important; box-shadow: 0 2px 5px rgba(255, 105, 180, 0.1) !important;
         margin-bottom: 20px !important;
     }
-    .home-btn > button:hover { background-color: #FFF0F5 !important; border-color: #FF1493 !important; transform: translateY(-2px) !important; }
-
-    .styled-card {
-        background-color: #FFFFFF; border: 3px solid #FFC0CB; border-radius: 20px;
-        padding: 30px; box-shadow: 0 8px 20px rgba(255, 105, 180, 0.1); margin-bottom: 25px;
+    div.stButton > button[kind="secondary"]:hover {
+        background-color: #FFF0F5 !important; border-color: #FF1493 !important; transform: translateY(-2px) !important;
     }
 
-    div.row-widget.stRadio > div { flex-direction: column; gap: 10px; }
-    
-    .gemini-btn > button {
+    /* 🚀 AI 분석 메인 버튼 스타일 (Primary Button) */
+    div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #FF69B4 0%, #FFA500 100%) !important;
         color: white !important; border: none !important; border-radius: 15px !important;
         font-weight: 900 !important; font-size: 1.4rem !important; padding: 15px 0 !important;
         box-shadow: 0 6px 15px rgba(255, 105, 180, 0.4) !important; transition: all 0.3s ease !important;
         width: 100%;
+        margin-top: 15px !important;
     }
-    .gemini-btn > button:hover {
+    div.stButton > button[kind="primary"]:hover {
         transform: translateY(-5px) !important; box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5) !important;
         background: linear-gradient(135deg, #FFA500 0%, #FF1493 100%) !important;
     }
@@ -107,14 +107,7 @@ st.markdown("""
     }
 
     @media print {
-        header { display: none !important; }
-        [data-testid="stSidebar"] { display: none !important; }
-        .styled-card { display: none !important; }
-        .gemini-btn { display: none !important; }
-        .home-btn { display: none !important; }
-        .stRadio { display: none !important; }
-        .engine-select { display: none !important; }
-        h1, p { display: none !important; } 
+        header, [data-testid="stSidebar"], .stButton, .stRadio, h1, p { display: none !important; } 
         .stApp { background-color: white !important; }
         .result-box { box-shadow: none !important; border: 1px solid #ccc !important; }
     }
@@ -122,9 +115,7 @@ st.markdown("""
     @media (max-width: 768px) {
         h1.main-title { font-size: 2rem !important; line-height: 1.3 !important; }
         p.sub-title { font-size: 1rem !important; margin-top: 5px !important; }
-        .styled-card { padding: 15px !important; border-radius: 15px !important; }
-        .styled-card h3 { font-size: 1.2rem !important; margin-bottom: 10px !important; padding-bottom: 5px !important; }
-        .gemini-btn > button { font-size: 1.1rem !important; padding: 10px 0 !important; }
+        div.stButton > button[kind="primary"] { font-size: 1.1rem !important; padding: 10px 0 !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -140,9 +131,9 @@ with st.sidebar:
     else: st.warning("⚠️ 학교 오프라인 DB 모드 동작 중")
     st.markdown("💖 **양명여자고등학교 진로진학부**")
 
-st.markdown('<div class="home-btn">', unsafe_allow_html=True)
-if st.button("🏠 메인 화면으로 가기"): st.switch_page("app.py")
-st.markdown('</div>', unsafe_allow_html=True)
+# 홈 버튼 (Secondary 타입으로 설정하여 위 CSS 적용)
+if st.button("🏠 메인 화면으로 가기", type="secondary"): 
+    st.switch_page("app.py")
 
 st.markdown("""
 <div style='text-align: center; padding-bottom: 20px;'>
@@ -179,15 +170,24 @@ recommended_activities = {
     "예체능계열": ["드림업 프로젝트", "스마트폰 이별주간 캠페인", "전문직업인 초청 특강"]
 }
 
-st.markdown("<div class='styled-card'>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #FF1493; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>📝 STEP 1. 계열 및 학과 선택</h3>", unsafe_allow_html=True)
+# --- STEP 1 ---
+st.markdown("""
+<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; box-shadow: 0 4px 10px rgba(255, 105, 180, 0.05); margin-bottom: 20px;'>
+    <h3 style='color: #FF1493; margin: 0; padding-bottom: 5px;'>📝 STEP 1. 계열 및 학과 선택</h3>
+</div>
+""", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1: selected_track = st.selectbox("🌟 희망 계열", list(career_data.keys()))
 with col2: selected_major = st.selectbox("🎓 세부 학과", career_data[selected_track])
 
 target_name = selected_major if selected_major != "계열 전반 (특정 학과 미정)" else f"{selected_track} 전반"
 
-st.markdown(f"<h3 style='color: #FF1493; margin-top: 30px; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🎯 STEP 2. 활동 선택</h3>", unsafe_allow_html=True)
+# --- STEP 2 ---
+st.markdown("""
+<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; box-shadow: 0 4px 10px rgba(255, 105, 180, 0.05); margin-top: 30px; margin-bottom: 20px;'>
+    <h3 style='color: #FF1493; margin: 0; padding-bottom: 5px;'>🎯 STEP 2. 활동 선택 (추천/기타)</h3>
+</div>
+""", unsafe_allow_html=True)
 recs = recommended_activities[selected_track]
 all_activities = list(activities_db.keys())
 
@@ -201,45 +201,41 @@ for act in all_activities:
 selected_act_display = st.radio("활동 목록", display_options, label_visibility="collapsed")
 selected_act = selected_act_display.split("] ")[1].replace(" (🎓3학년 전용)", "")
 act_type = activities_db.get(selected_act, "주도형")
-st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("<div class='styled-card'>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='color: #FF1493; margin-bottom: 20px; border-bottom: 2px solid #FFC0CB; padding-bottom: 10px;'>🔍 STEP 3. 세부 정보 입력 ({act_type})</h3>", unsafe_allow_html=True)
+# --- STEP 3 ---
+st.markdown(f"""
+<div style='background-color: white; padding: 15px 25px; border-radius: 15px; border: 2px solid #FFC0CB; box-shadow: 0 4px 10px rgba(255, 105, 180, 0.05); margin-top: 30px; margin-bottom: 20px;'>
+    <h3 style='color: #FF1493; margin: 0; padding-bottom: 5px;'>🔍 STEP 3. 세부 정보 입력 ({act_type})</h3>
+</div>
+""", unsafe_allow_html=True)
 
 custom_title = ""
 if act_type == "비주도형":
     st.warning("이 활동은 강연 청취나 정해진 실습을 수행하는 **[비주도형/강의형]** 활동입니다. 강연 후 심화 후속 활동 방향을 알려드립니다.")
-    # 💡 오타 수정 및 플레이스홀더 적용 완료!
     custom_title = st.text_input("✏️ 수강/참가한 강의/특강/실습의 제목을 입력해 주세요 (필수)", placeholder="예: 화학, AI 윤리, 분광기 실습")
 else:
     st.success("이 활동은 스스로 탐구하는 **[학생 주도형]** 활동입니다. 기획하고 실행하는 가이드를 제공합니다.")
     custom_title = st.text_input("💡 (선택) 특별히 다루고 싶은 관심 주제나 읽고 있는 책이 있다면 적어주세요.")
-st.markdown("</div>", unsafe_allow_html=True)
 
-# 💡 하이브리드 엔진 선택 스위치 (학생 선택용)
-st.markdown("<div class='engine-select'>", unsafe_allow_html=True)
+st.write("---")
 engine_choice = st.radio(
     "💡 분석 엔진 선택", 
     ["✨ 제미나이 AI 실시간 분석 (추천/창의적안)", "📚 학교 자체 데이터베이스 (빠름/안정적)"], 
     horizontal=True
 )
-st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown('<div class="gemini-btn">', unsafe_allow_html=True)
-gemini_btn = st.button("🚀 선택한 엔진으로 활동 가이드 생성", use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
+# 분석 버튼 (Primary 타입으로 설정하여 위 CSS 적용)
+gemini_btn = st.button("🚀 선택한 엔진으로 활동 가이드 생성", type="primary", use_container_width=True)
 st.write("---")
 
 if gemini_btn:
     if act_type == "비주도형" and not custom_title: 
         st.warning("⚠️ 강의/실습 제목을 반드시 입력해 주셔야 맞춤형 가이드가 나옵니다.")
     else:
-        # 오프라인 DB 모드를 선택한 경우
         if "학교 자체" in engine_choice:
             st.success("✅ 학교 자체 데이터베이스 엔진으로 신속하게 결과를 생성했습니다!")
             show_offline_result(target_name, selected_act, custom_title)
             
-        # 제미나이 AI 모드를 선택한 경우
         else:
             if not api_key:
                 st.warning("⏳ AI 서버 키가 설정되지 않아 **[학교 자체 데이터베이스]** 모드로 자동 전환합니다!")
@@ -278,7 +274,6 @@ if gemini_btn:
                         
                         components.html("""<script>function printResult() { try { window.parent.print(); } catch (e) { window.print(); } }</script><div style="text-align: center; margin-top: 20px;"><button onclick="printResult()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">🖨️ 결과 화면 PDF 출력</button></div>""", height=100)
 
-                # 💡 [무적의 자동 우회] 트래픽 과부하 에러 시 오프라인 DB로 즉시 전환!
                 except Exception as e:
                     error_msg = str(e).lower()
                     if "429" in error_msg or "quota" in error_msg or "exhausted" in error_msg:
