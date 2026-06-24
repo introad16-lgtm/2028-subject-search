@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import google.generativeai as genai
 import PyPDF2
 import re
@@ -55,7 +56,7 @@ def load_local_pdf(file_path):
             pass 
     return text
 
-# --- 📊 똑똑한 양명여고 합불 통계 검색 함수 (최종 보완본) ---
+# --- 📊 양명여고 합불 통계 검색 함수 ---
 @st.cache_data
 def get_local_admission_stats(file_path, target_univ, target_major):
     if not os.path.exists(file_path):
@@ -64,27 +65,22 @@ def get_local_admission_stats(file_path, target_univ, target_major):
         df = pd.read_excel(file_path, sheet_name=0)
         filtered_df = df.copy()
         
-        # 1단계: 입력한 대학명과 학과명이 둘 다 일치하는 데이터 필터링
         if target_univ:
             filtered_df = filtered_df[filtered_df['대학명'].str.contains(target_univ, na=False)]
         if target_major:
             filtered_df = filtered_df[filtered_df['지원학과(모집단위)'].str.contains(target_major, na=False)]
         
-        # 2단계: 만약 해당 대학에 데이터가 없다면, 대학 무관 '같은 학과' 데이터만 다시 검색
         is_fallback = False
         if filtered_df.empty and target_major:
              filtered_df = df[df['지원학과(모집단위)'].str.contains(target_major, na=False)]
              is_fallback = True
 
-        # 3단계: 타 대학을 뒤졌는데도 아예 학과 자체가 없으면 안내문 출력
         if filtered_df.empty:
             return f"❌ 최근 3개년(2022~2025) 양명여고 데이터에 '{target_major}' 관련 지원 기록이 아예 존재하지 않습니다."
         
-        # 통계 계산 진행
         stats = filtered_df.groupby(['대학명', '전형명', '최종합불결과'])['전교과_내신평균'].agg(['count', 'mean', 'min', 'max']).reset_index()
         stats.columns = ['대학명', '전형명', '결과', '지원건수', '평균내신', '최고내신(min)', '최저내신(max)']
         
-        # 💡 타 대학 데이터일 경우 안내 문구를 명확하게 구분!
         if is_fallback and target_univ:
             stats_str = f"💡 [참고 데이터] 최근 3년간 양명여고 선배들의 '{target_univ} {target_major}' 지원 기록이 없습니다.\n"
             stats_str += f"👉 대신 엑셀 DB에 등록된 **'다른 대학교의 {target_major}'** 관련 지원 통계를 출력합니다.\n\n"
@@ -121,6 +117,14 @@ st.markdown("""
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th { background-color: #F1F5F9; text-align: left; padding: 12px; border: 1px solid #CBD5E1; }
     td { padding: 12px; border: 1px solid #CBD5E1; vertical-align: top; }
+    
+    /* 🔥 [핵심] 인쇄(PDF 저장) 시 리포트 외의 모든 지저분한 메뉴 숨기기 */
+    @media print {
+        [data-testid="stSidebar"], [data-testid="stHeader"], div[data-testid="stToolbar"] { display: none !important; }
+        .stButton, .stDownloadButton, .upload-box, .status-box, iframe { display: none !important; }
+        .stApp { background-color: white !important; }
+        .report-box { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -175,7 +179,6 @@ st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 [분석 대상] 학
 st.info("💡 분석할 학생의 나이스 생기부 PDF 파일을 올려주세요. 개인정보는 100% 자동 삭제됩니다.")
 student_file = st.file_uploader("학생 생기부 파일 업로드", type=["pdf"], key="stu_upload", label_visibility="collapsed")
 
-# 📋 기본 인적 정보 입력란
 col1, col2, col3 = st.columns(3)
 with col1: target_univ = st.text_input("🎯 1지망 대학", placeholder="예: 서울대")
 with col2: target_major = st.text_input("🎓 1지망 학과", placeholder="예: 교육학과")
@@ -184,14 +187,13 @@ with col3: student_grade = st.text_input("📊 학생 전교과 내신", placeho
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("<h4 style='color: #1E3A8A; margin-bottom: 10px;'>📋 정밀 분석을 위한 사전 진단 입력란 (AI 포트폴리오에 즉시 반영)</h4>", unsafe_allow_html=True)
 
-# 🔄 사전 질문을 상단 입력 폼으로 전면 배치
 col_q1, col_q2 = st.columns(2)
 with col_q1:
     s_strategy = st.selectbox("⚖️ 수시 전략 방향성", ["선택 안함", "학생부종합전형(학종) 중심", "교과전형 중심", "학종/교과 균형 병행", "실기 및 특기자 전형 위주"])
     s_region = st.text_input("🗺️ 선호 대학 권역", value="인서울 최우선 및 수도권 주요 대학 선호")
 with col_q2:
     s_minimum = st.text_input("📝 수능 최저 학력 기준 충족 가능성", placeholder="예: 모의고사 2합 6 안정적 가능 / 최저 없는 전형 희망")
-    s_interview = st.text_input("🎤 학생의 면접 대비 상태 및 성향", placeholder="예: 말하기 자신감 높음 / 모의면접 경험 없음, 면접 위주 전형 부담 등")
+    s_interview = st.text_input("🎤 학생의 면접 대비 상태 및 성향", placeholder="예: 말하기 자신감 높음 / 모의면접 경험 없음 등")
 
 final_student_record = ""
 admission_stats_text = ""
@@ -214,7 +216,6 @@ if target_major:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 💡 시스템 프롬프트 (마크다운 규칙 강화 및 사전 질문 항목 제거)
 TEACHER_SYSTEM_PROMPT = """
 [System Role & Persona]
 당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
@@ -295,7 +296,6 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     ref_text_block = f"[우수 생기부 참조 데이터 (평가 기준)]\n{reference_record}\n" if reference_record else ""
                     stats_text_block = f"[양명여고 최근 3년 합불 통계 (수시 6장 설계 기준)]\n{admission_stats_text}\n" if admission_stats_text else ""
                     
-                    # 🔥 하드 방화벽(데이터 파편화 방지) 및 사전 진단 데이터 조립
                     user_prompt = f"""
                     구글 제미나이 엔진 지침: 당신은 오직 아래의 [3. 🔥 진짜 분석 대상 학생 정보]만 분석해야 합니다. 다른 참조 데이터에 등장하는 예시 인물들을 별도의 데이터로 추출하거나 리포트를 여러 개로 쪼개지 마십시오.
 
@@ -318,7 +318,7 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     {final_student_record}
                     ======================================================================
                     
-                    최종 지시: 위 [1번 참조 데이터]에 압도되어 다른 인물을 추출하는 실수를 범하지 마십시오. 오직 [3번]의 실제 학생 1명만을 대상으로, 기입된 사전 진단 내역(수능최저, 면접 상태 등)을 철저히 반영하여 수시 6장 카드와 핵심 상담 포인트를 극도로 현실성 있게 구성하세요. 마크다운 표 개행 규칙을 준수하여 1~6번 리포트를 단 하나의 덩어리로 작성하십시오.
+                    최종 지시: 위 [1번 참조 데이터]에 압도되어 다른 인물을 추출하는 실수를 범하지 마십시오. 오직 [3번]의 실제 학생 1명만을 대상으로, 기입된 사전 진단 내역을 철저히 반영하여 수시 6장 카드와 핵심 상담 포인트를 극도로 현실성 있게 구성하세요. 마크다운 표 개행 규칙을 준수하여 1~6번 리포트를 단 하나의 덩어리로 작성하십시오.
                     """
                     
                     st.session_state.chat_session = model.start_chat(history=[])
@@ -327,25 +327,44 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
                     st.success(f"✅ {engine_name}으로 심층 분석 리포트가 완성되었습니다!")
                     
+                    # 리포트 출력 영역
                     st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                     st.markdown(response.text)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
+                    st.markdown("---")
+                    
+                    # 📥 일반 마크다운 텍스트 다운로드 버튼
                     st.download_button(
-                        label="📥 생성된 분석 리포트 다운로드 (.md 파일)",
+                        label="📄 텍스트(.md) 파일로 백업 다운로드",
                         data=response.text,
                         file_name=f"양명여고_생기부분석_{target_major if target_major else '결과'}.md",
                         mime="text/markdown"
                     )
                     
-                    st.info("💡 **PDF 저장 꿀팁:** 리포트 화면을 표와 디자인이 유지된 채로 가장 예쁘게 PDF로 저장하시려면, 키보드 **`Ctrl + P` (맥은 `Cmd + P`)**를 누르시고 **[PDF로 저장]**을 선택하시는 것이 가장 완벽합니다!")
+                    # 🖨️ 마법의 직접 인쇄(PDF 저장) 버튼 추가
+                    st.info("💡 **가장 완벽한 PDF 저장 방법:** 아래 버튼을 누른 후, 인쇄 창에서 **대상: 'PDF로 저장'**, 옵션에서 **'배경 그래픽'에 체크**를 하시면 디자인이 유지된 채 깔끔하게 저장됩니다!")
+                    
+                    components.html(
+                        """
+                        <script>
+                        function printPage() {
+                            window.parent.print();
+                        }
+                        </script>
+                        <button onclick="printPage()" style="width: 100%; padding: 15px; background-color: #4F46E5; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: sans-serif; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            🖨️ 보고서 화면을 PDF로 인쇄/저장하기 (클릭)
+                        </button>
+                        """,
+                        height=60
+                    )
                     
                     success = True
                     break 
                     
                 except Exception as e:
                     if key_choice == "🤖 자동 모드 (권장)" and idx < len(target_keys) - 1:
-                        st.warning(f"⚠️ {idx+1}번 엔진 응답 지연/한도 초과. 즉시 다음 예비 엔진으로 자동 전환합니다...")
+                        st.warning(f"⚠️ {idx+1}번 엔진 응답 지연. 즉시 다음 예비 엔진으로 전환합니다...")
                         continue 
                     else:
                         st.error(f"🚨 분석 중 오류가 발생했습니다.\n\n상세 내용: {str(e)}")
@@ -354,7 +373,6 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
-    st.info("리포트를 확인하신 후 수시 전략 수정 등을 요구나 추가 질문을 해보세요.")
     user_msg = st.chat_input("질문이나 추가 정보를 입력하세요...")
     if user_msg:
         with st.chat_message("user"): st.markdown(user_msg)
