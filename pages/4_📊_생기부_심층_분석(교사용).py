@@ -162,17 +162,30 @@ st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 [분석 대상] 학
 st.info("💡 분석할 학생의 나이스 생기부 PDF 파일을 올려주세요. 개인정보는 100% 자동 삭제됩니다.")
 student_file = st.file_uploader("학생 생기부 파일 업로드", type=["pdf"], key="stu_upload", label_visibility="collapsed")
 
+# 📋 기본 인적 정보 입력란
 col1, col2, col3 = st.columns(3)
-with col1: target_univ = st.text_input("🎯 1지망 대학 (예: 서울대)")
-with col2: target_major = st.text_input("🎓 1지망 학과 (예: 교육)")
-with col3: student_grade = st.text_input("📊 학생 전교과 내신 (예: 1.5)")
+with col1: target_univ = st.text_input("🎯 1지망 대학", placeholder="예: 서울대")
+with col2: target_major = st.text_input("🎓 1지망 학과", placeholder="예: 교육학과")
+with col3: student_grade = st.text_input("📊 학생 전교과 내신", placeholder="예: 1.5")
+
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<h4 style='color: #1E3A8A; margin-bottom: 10px;'>📋 정밀 분석을 위한 사전 질문 입력란 (AI 포트폴리오에 즉시 반영)</h4>", unsafe_allow_html=True)
+
+# 🔄 7번 사전 질문을 상단 입력 폼으로 전면 배치
+col_q1, col_q2 = st.columns(2)
+with col_q1:
+    s_strategy = st.selectbox("⚖️ 수시 전략 방향성", ["선택 안함", "학생부종합전형(학종) 중심", "교과전형 중심", "학종/교과 균형 병행", "실기 및 특기자 전형 위주"])
+    s_region = st.text_input("🗺️ 선호 대학 권역", value="인서울 최우선 및 수도권 주요 대학 선호")
+with col_q2:
+    s_minimum = st.text_input("📝 수능 최저 학력 기준 충족 가능성", placeholder="예: 모의고사 2합 6 안정적 가능 / 최저 없는 전형 희망")
+    s_interview = st.text_input("🎤 학생의 면접 대비 상태 및 성향", placeholder="예: 말하기 자신감 높음 / 모의면접 경험 없음, 면접 위주 전형 부담 등")
 
 final_student_record = ""
 admission_stats_text = ""
 
 if student_file:
     if "current_file_name" not in st.session_state or st.session_state.current_file_name != student_file.name:
-        with st.spinner("📄 생기부 텍스트 추출 및 마스킹 작업 중... (최초 1회만 진행되며 약 5~10초 소요됩니다)"):
+        with st.spinner("📄 생기부 텍스트 추출 및 마스킹 작업 중..."):
             raw_student_text = extract_text_from_pdf(student_file)
             st.session_state.final_student_record = anonymize_text(raw_student_text)
             st.session_state.current_file_name = student_file.name
@@ -188,19 +201,17 @@ if target_major:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 🔥 줄바꿈(Enter) 규칙이 추가된 강력한 프롬프트
+# 💡 시스템 프롬프트에서 7번 질문 항목을 제거하고 상단 입력값 반영 지침으로 수정
 TEACHER_SYSTEM_PROMPT = """
 [System Role & Persona]
 당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
 
-[🚨 Markdown 표 작성 시 절대 준수 규칙 (매우 중요)]
-1. 표(Table)를 생성할 때 **반드시 각 행(Row)이 끝날 때마다 명확하게 줄바꿈(Enter/Newline)**을 하세요.
-2. 파이프 기호(|)로 구분된 표 내용이 한 줄의 긴 텍스트로 뭉쳐서 출력되면 마크다운이 깨집니다. 절대 뭉쳐서 출력하지 마세요.
-3. 지정된 표 양식을 그대로 복사해서 빈칸을 채우는 방식으로 작성하되, 줄바꿈이 유실되지 않도록 각별히 주의하세요.
+[🚨 마크다운 표 줄바꿈 절대 보존 원칙]
+- 표(Table)의 행(| 내용 |)을 생성할 때 마다 **반드시 줄바꿈(Enter/개행 기호)**을 철저히 지키십시오. 한 줄로 뭉치면 표가 깨집니다.
 
 [Core Evaluation Principles (5대 절대 준수 원칙)]
 1. 기록의 패러다임: '참여 사실' 나열은 최하점, '학생의 주도적 확장 + 교사의 전문적 평가' 결합을 최우수로 평가.
-2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류] 점검.
+2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류] 구조 점검.
 3. 철학적 사유와 초융합: 인문/철학적 질문을 자연과학/공학의 원리로 증명(또는 그 반대)하는 창의적 융합 확인.
 4. 도구 교과의 무기화: 수학, 정보(AI/코딩)를 활용한 정량적 산출물 유무 점검.
 5. 표현의 구체성: '분석하다, 증명하다, 모델링하다' 등 학술적인 행동동사 중심 분석.
@@ -211,11 +222,10 @@ TEACHER_SYSTEM_PROMPT = """
 3. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
 
 [Execution Tasks & Strict Output Templates]
-반드시 아래의 목차와 표(Table) 형식을 단 하나도 빠짐없이, 정확한 마크다운 줄바꿈을 유지하며 출력하세요.
+선생님이 사전에 입력한 [사전 진단 맥락 정보]를 모든 역량 평가와 수시 포트폴리오(상향/적정/안정 카드 배치) 설계 시 유기적으로 결합하여 반영하되, 아래 지정된 1~6번 목차 양식만 엄격하게 출력하세요. (질문 단계는 완료되었으므로 질문 항목은 출력하지 않습니다.)
 
 1. 총평 및 대입 3대 핵심 역량 평가
 * 총평: (사정관 시각에서 초안의 핵심 경쟁력과 보완점을 2~3줄로 요약)
-
 | 평가 영역 | 평가 등급 | 생기부 기반 구체적 성취 수준 및 정성 평가 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
 | :--- | :---: | :--- | :--- |
 | 학업 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
@@ -223,7 +233,6 @@ TEACHER_SYSTEM_PROMPT = """
 | 공동체 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
 
 2. 전략적 지원 학과 추천
-
 | 추천 방향성 | 추천 학과(전공) | 생기부 기반 추천 사유 및 타당성 (개조식) |
 | :--- | :--- | :--- |
 | ① 메인 전공 (정면 돌파) | | * 내용 |
@@ -231,7 +240,7 @@ TEACHER_SYSTEM_PROMPT = """
 | ③ 융합 전공 (미래 유망) | | * 내용 |
 
 3. 수시 6장 지원 대학 포트폴리오
-
+(제공된 선생님의 수시 전략, 권역 선호도, 수능 최저 충족 상황을 반영하여 리얼하게 포트폴리오를 설계할 것)
 | 지원 전략 | 추천 대학 | 추천 전형 (교과/종합/논술) | 추천 사유 및 합격 가능성 분석 (개조식) |
 | :--- | :--- | :--- | :--- |
 | 상향 (도전) 1 | | | * 내용 |
@@ -242,7 +251,6 @@ TEACHER_SYSTEM_PROMPT = """
 | 안정 2 | | | * 내용 |
 
 4. 남은 학기 맞춤형 후속 탐구(Follow-up Project) 기획
-
 | 영역 | 제안 탐구 주제명 | 제안 배경 및 근거 | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) | 기대 효과 및 어필 역량 |
 | :--- | :--- | :--- | :--- | :--- |
 | 창체 자율 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
@@ -250,29 +258,20 @@ TEACHER_SYSTEM_PROMPT = """
 | 교과 세특 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
 
 5. [양명여고 특화] 심화 융합 탐구 마스터 플랜
-
 | 융합 프로젝트 주제명 | 연계 대상 (교과 및 창체) | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) |
 | :--- | :--- | :--- |
 | 주제 1 | | * 1단계: <br> * 2단계: <br> * 3단계: <br> * 4단계: |
 | 주제 2 | | * 1단계: <br> * 2단계: <br> * 3단계: <br> * 4단계: |
 
 6. 핵심 상담 포인트
-* (전체 전략의 핵심을 2~3줄로 요약)
-
-7. 정밀 분석을 위한 사전 질문
-- 📊 성적 입력: 현재까지의 전체 평균 등급 및 주요 과목 성적은 어떻게 되나요?
-- 🎯 학생 선호: 학생 A의 실제 1지망 학과 및 학교는 어디인가요?
-- ⚖️ 수시 전략: 학종 중심인지, 교과를 병행할 예정인지 방향성이 있나요?
-- 🗺️ 대학 권역: 인서울 최우선인지, 경기/인천 등 수도권까지 허용 가능한가요?
-- 📝 수능 최저 충족: 모의고사 점수 또는 수능 최저 학력 기준 충족 가능성을 알려주세요.
-- 🎤 면접 대비: 학생의 말하기 자신감이나 모의면접 경험 여부는 어떠한가요?
+* (교사가 학생 및 학부모 상담 시 수능최저, 면접 강약점을 연계하여 바로 활용할 수 있는 전체 전략의 핵심을 2~3줄로 요약)
 """
 
 if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=True):
     if not student_file: st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
     elif not target_keys: st.error("🚨 사용 가능한 API 키가 없습니다. 좌측 사이드바 설정을 확인해 주세요.")
     else:
-        with st.spinner("🌐 AI 엔진 가동 중... (표 양식을 맞추어 생성 중이므로 약 30~40초가 소요됩니다)"):
+        with st.spinner("🌐 AI 엔진 가동 중... (입력하신 사전 진단 데이터를 기반으로 맞춤형 수시 라인을 설계 중입니다)"):
             success = False
             for idx, current_key in enumerate(target_keys):
                 try:
@@ -283,18 +282,28 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     ref_text_block = f"[우수 생기부 참조 데이터 (평가 기준)]\n{reference_record}\n" if reference_record else ""
                     stats_text_block = f"[양명여고 최근 3년 합불 통계 (수시 6장 설계 기준)]\n{admission_stats_text}\n" if admission_stats_text else ""
                     
+                    # 🔥 사전 질문 답변 데이터가 완벽하게 격리 및 조립되어 주입됩니다.
                     user_prompt = f"""
+                    [1. 우수 사례 참조 데이터 (오직 '평가 기준'으로만 참고)]
                     {ref_text_block}
+                    
+                    [2. 양명여고 합불 통계 데이터]
                     {stats_text_block}
                     
-                    --------------------------------------------------
-                    [분석 대상 학생 정보]
-                    - 1지망 대학: {target_univ if target_univ else '미입력'}
-                    - 1지망 학과: {target_major if target_major else '미입력'}
-                    - 전교과 내신 평균: {student_grade if student_grade else '미입력'}
+                    ======================================================================
+                    [3. 🔥 분석 대상 학생의 기본 정보 및 선생님의 사전 진단 맥락]
+                    - 1지망 대학/학과: {target_univ if target_univ else '미입력'} / {target_major if target_major else '미입력'}
+                    - 전교과 내신 평균 등급: {student_grade if student_grade else '미입력'}
+                    - ⚖️ 선생님이 판단한 수시 전략 방향: {s_strategy}
+                    - 🗺️ 선호 대학 권역 범위: {s_region}
+                    - 📝 모의고사 기준 수능 최저 충족 여부: {s_minimum}
+                    - 🎤 학생의 구체적 면접 역량 및 성향: {s_interview}
                     
-                    [학생 데이터 입력란]
+                    [🚨 진짜 분석 대상 학생의 실제 생기부 텍스트]
                     {final_student_record}
+                    ======================================================================
+                    
+                    최종 지시: 위 [3번]의 사전 진단 내역(수능최저, 면접 상태 등)을 철저히 반영하여, 수시 6장 카드와 6번 핵심 상담 포인트를 극도로 현실성 있게 구성하세요. 마크다운 표 개행 규칙을 준수하여 1~6번 리포트를 단 하나의 덩어리로 작성하십시오.
                     """
                     
                     st.session_state.chat_session = model.start_chat(history=[])
@@ -303,20 +312,16 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
                     st.success(f"✅ {engine_name}으로 심층 분석 리포트가 완성되었습니다!")
                     
-                    # 리포트 출력
                     st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                     st.markdown(response.text)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
-                    # 📥 다운로드 버튼 추가
                     st.download_button(
                         label="📥 생성된 분석 리포트 다운로드 (.md 파일)",
                         data=response.text,
                         file_name=f"양명여고_생기부분석_{target_major if target_major else '결과'}.md",
                         mime="text/markdown"
                     )
-                    
-                    st.info("💡 **PDF 저장 꿀팁:** 리포트 화면을 표와 디자인이 유지된 채로 가장 예쁘게 PDF로 저장하시려면, 키보드 **`Ctrl + P` (맥은 `Cmd + P`)**를 누르시고 **[PDF로 저장]**을 선택하시는 것이 가장 완벽합니다!")
                     
                     success = True
                     break 
@@ -332,7 +337,6 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
-    st.info("리포트 하단의 '사전 질문'에 대한 답변을 입력하거나, 수시 전략 수정 등을 요구해 보세요.")
     user_msg = st.chat_input("질문이나 추가 정보를 입력하세요...")
     if user_msg:
         with st.chat_message("user"): st.markdown(user_msg)
