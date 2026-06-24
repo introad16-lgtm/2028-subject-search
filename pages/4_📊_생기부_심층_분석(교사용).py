@@ -20,15 +20,14 @@ def get_best_model(api_key):
 
 # --- 🛡️ 강력한 개인정보 자동 블라인드(마스킹) 함수 ---
 def anonymize_text(text):
-    text = re.sub(r'\d{6}\s*-\s*\d{7}', '******-*******', text) # 주민번호
-    text = re.sub(r'(성명\s*:\s*)[가-힣]{2,5}', r'\1OOO', text) # 성명
-    text = re.sub(r'(주소\s*:\s*).*?(?=\n|$)', r'\1[주소 자동 블라인드 처리됨]', text) # 주소
-    text = re.sub(r'010\s*-\s*\d{3,4}\s*-\s*\d{4}', '010-****-****', text) # 연락처
-    text = re.sub(r'\b([1-3])(0[1-9]|1[0-9])([0-3][0-9]|40)\b', r'\1****', text) # 학번
-    text = re.sub(r'(졸업 대장 번호\s*\|?\s*)\d+', r'\1[번호 삭제됨]', text) # 졸업번호
+    text = re.sub(r'\d{6}\s*-\s*\d{7}', '******-*******', text) 
+    text = re.sub(r'(성명\s*:\s*)[가-힣]{2,5}', r'\1OOO', text) 
+    text = re.sub(r'(주소\s*:\s*).*?(?=\n|$)', r'\1[주소 자동 블라인드 처리됨]', text) 
+    text = re.sub(r'010\s*-\s*\d{3,4}\s*-\s*\d{4}', '010-****-****', text) 
+    text = re.sub(r'\b([1-3])(0[1-9]|1[0-9])([0-3][0-9]|40)\b', r'\1****', text) 
+    text = re.sub(r'(졸업 대장 번호\s*\|?\s*)\d+', r'\1[번호 삭제됨]', text) 
     return text
 
-# --- 📄 학생 PDF 텍스트 추출 함수 (화면 업로드용) ---
 def extract_text_from_pdf(uploaded_file):
     text = ""
     try:
@@ -41,7 +40,6 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"학생 PDF 파일 읽기 오류: {e}")
     return text
 
-# --- 📚 우수 생기부 자동 로드 함수 (백그라운드용) ---
 @st.cache_data
 def load_local_pdf(file_path):
     text = ""
@@ -54,10 +52,9 @@ def load_local_pdf(file_path):
                     if extracted:
                         text += extracted + "\n"
         except Exception as e:
-            pass # 숨겨진 파일이므로 에러 시 조용히 넘어감
+            pass 
     return text
 
-# --- 📈 엑셀 데이터 자동 로드 및 요약 함수 (백그라운드용) ---
 @st.cache_data
 def get_local_admission_stats(file_path, target_univ, target_major):
     if not os.path.exists(file_path):
@@ -110,13 +107,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-try: api_key = st.secrets["GEMINI_API_KEY"]
-except: api_key = None
+# 🔑 트리플 API 키 가져오기
+try: api_key_1 = st.secrets["GEMINI_API_KEY_1"]
+except: api_key_1 = None
+
+try: api_key_2 = st.secrets["GEMINI_API_KEY_2"]
+except: api_key_2 = None
+
+try: api_key_3 = st.secrets["GEMINI_API_KEY_3"]
+except: api_key_3 = None
 
 with st.sidebar:
-    st.markdown("### 🔐 교사 전용 모드")
-    if api_key: st.success("✅ AI 서버 연결 정상!")
-    else: st.error("🚨 API 키를 설정해주세요.")
+    st.markdown("### 🔐 교사 전용 모드 (트리플 엔진)")
+    
+    key_choice = st.radio("사용할 AI 계정 선택:", ["계정 1 (메인)", "계정 2 (예비 1)", "계정 3 (예비 2)"])
+    
+    if key_choice == "계정 1 (메인)":
+        api_key = api_key_1
+    elif key_choice == "계정 2 (예비 1)":
+        api_key = api_key_2
+    else:
+        api_key = api_key_3
+        
+    if api_key: 
+        st.success(f"✅ {key_choice} 연결 정상!")
+    else: 
+        st.error(f"🚨 {key_choice}의 API 키가 올바르지 않거나 없습니다.")
+        
     st.markdown("---")
     st.markdown("**양명여자고등학교 진로진학부**")
 
@@ -129,7 +146,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 💡 백그라운드 파일 자동 로딩 상태창
 st.markdown("""
 <div class='status-box'>
     <h4 style='color: #1D4ED8; margin-top: 0; margin-bottom: 15px;'>⚙️ 학교 DB 자동 연동 상태</h4>
@@ -138,14 +154,11 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 깃허브에 올라가 있는 파일명 고정
 REF_PDF_PATH = "우수생기부통합.pdf"
 EXCEL_FILE_PATH = "양명여고_합불데이터(2022_2025).xlsx"
 
-# 우수 생기부는 켜자마자 백그라운드에서 읽어둠 (캐시 적용으로 아주 빠름)
 reference_record = load_local_pdf(REF_PDF_PATH)
 
-# --- 2. 입력 폼 (학생 것만 입력) ---
 st.markdown("<div class='upload-box'>", unsafe_allow_html=True)
 st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 [분석 대상] 학생 생기부 (PDF)</h3>", unsafe_allow_html=True)
 st.info("💡 분석할 학생의 나이스 생기부 PDF 파일을 올려주세요. 개인정보는 100% 자동 삭제됩니다.")
@@ -172,7 +185,6 @@ if target_major:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 3. 선생님 전용 프롬프트 ---
 TEACHER_SYSTEM_PROMPT = """
 당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
 
@@ -215,14 +227,14 @@ TEACHER_SYSTEM_PROMPT = """
 - 🎤 면접 대비: 학생의 말하기 자신감이나 모의면접 경험 여부는 어떠한가요?
 """
 
-# --- 4. 분석 실행 ---
-if st.button("🚀 자동 연동 DB 기반 심층 분석 시작", type="primary"):
+# 👇 변경된 부분: 버튼 텍스트를 "🚀 AI 생기부 분석"으로 교체하고 전체 너비(use_container_width=True) 적용!
+if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=True):
     if not student_file:
         st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
     elif not api_key:
-        st.error("🚨 API 키가 설정되지 않았습니다.")
+        st.error("🚨 선택된 계정의 API 키가 설정되지 않았습니다. 좌측 사이드바를 확인해 주세요.")
     else:
-        with st.spinner("🌐 대입 컨설팅 전문가(AI)가 합불 통계와 우수 사례를 바탕으로 정밀 분석 중입니다..."):
+        with st.spinner(f"🌐 {key_choice} 엔진으로 합불 통계와 우수 사례 바탕 정밀 분석 중입니다..."):
             try:
                 genai.configure(api_key=api_key)
                 chosen_model = get_best_model(api_key)
@@ -251,7 +263,7 @@ if st.button("🚀 자동 연동 DB 기반 심층 분석 시작", type="primary"
                     st.session_state.chat_session = model.start_chat(history=[])
                 
                 response = st.session_state.chat_session.send_message(user_prompt)
-                st.success("✅ 심층 분석 리포트가 완성되었습니다!")
+                st.success(f"✅ {key_choice} 엔진으로 심층 분석 리포트가 완성되었습니다!")
                 
                 st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                 st.markdown(response.text)
@@ -260,7 +272,6 @@ if st.button("🚀 자동 연동 DB 기반 심층 분석 시작", type="primary"
             except Exception as e:
                 st.error(f"🚨 분석 중 오류가 발생했습니다: {str(e)}")
 
-# --- 5. 추가 상담 챗봇 UI ---
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
