@@ -141,6 +141,6 @@ with col3:
 with col4:
     # 4번째 교사용 심층 분석기 버튼 추가
     if st.button("**👑 교사용 컨설팅**\n\n합불 데이터와 우수사례를 융합해\n학생 생기부를 정밀 분석합니다.", use_container_width=True):
-        st.switch_page("pages/3_📊_생기부_심층_분석(교사용).py")
+        st.switch_page("pages/4_📊_생기부_심층_분석(교사용).py")
 
 st.sidebar.info("💖 양명여고 학생들의 밝은 미래를 응원합니다!")
