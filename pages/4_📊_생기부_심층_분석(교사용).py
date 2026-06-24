@@ -121,25 +121,13 @@ except: pass
 
 with st.sidebar:
     st.markdown("### 🔐 교사 전용 모드 (트리플 엔진)")
-    
-    # 🤖 자동 모드 옵션 추가
     key_choice = st.radio("사용할 AI 계정 선택:", ["🤖 자동 모드 (권장)", "계정 1 (메인)", "계정 2 (예비 1)", "계정 3 (예비 2)"])
     
-    if key_choice == "🤖 자동 모드 (권장)":
-        target_keys = keys_list
-        st.success(f"✅ 자동 모드 가동 중! (가용 엔진: {len(keys_list)}개)")
-    elif key_choice == "계정 1 (메인)" and len(keys_list) >= 1:
-        target_keys = [keys_list[0]]
-        st.success("✅ 계정 1 수동 연결!")
-    elif key_choice == "계정 2 (예비 1)" and len(keys_list) >= 2:
-        target_keys = [keys_list[1]]
-        st.success("✅ 계정 2 수동 연결!")
-    elif key_choice == "계정 3 (예비 2)" and len(keys_list) >= 3:
-        target_keys = [keys_list[2]]
-        st.success("✅ 계정 3 수동 연결!")
-    else:
-        target_keys = []
-        st.error("🚨 선택한 계정의 API 키가 없습니다.")
+    if key_choice == "🤖 자동 모드 (권장)": target_keys = keys_list; st.success(f"✅ 자동 모드 가동 중! (가용 엔진: {len(keys_list)}개)")
+    elif key_choice == "계정 1 (메인)" and len(keys_list) >= 1: target_keys = [keys_list[0]]; st.success("✅ 계정 1 수동 연결!")
+    elif key_choice == "계정 2 (예비 1)" and len(keys_list) >= 2: target_keys = [keys_list[1]]; st.success("✅ 계정 2 수동 연결!")
+    elif key_choice == "계정 3 (예비 2)" and len(keys_list) >= 3: target_keys = [keys_list[2]]; st.success("✅ 계정 3 수동 연결!")
+    else: target_keys = []; st.error("🚨 선택한 계정의 API 키가 없습니다.")
         
     st.markdown("---")
     st.markdown("**양명여자고등학교 진로진학부**")
@@ -163,7 +151,6 @@ st.markdown("""
 
 REF_PDF_PATH = "우수생기부통합.pdf"
 EXCEL_FILE_PATH = "양명여고_합불데이터(2022_2025).xlsx"
-
 reference_record = load_local_pdf(REF_PDF_PATH)
 
 st.markdown("<div class='upload-box'>", unsafe_allow_html=True)
@@ -179,7 +166,6 @@ with col3: student_grade = st.text_input("📊 학생 전교과 내신 (예: 1.5
 final_student_record = ""
 admission_stats_text = ""
 
-# ⚡ PDF 추출 속도 개선 코드
 if student_file:
     if "current_file_name" not in st.session_state or st.session_state.current_file_name != student_file.name:
         with st.spinner("📄 생기부 텍스트 추출 및 마스킹 작업 중... (최초 1회만 진행되며 약 5~10초 소요됩니다)"):
@@ -189,70 +175,108 @@ if student_file:
             st.success("✅ 학생 생기부 로드 및 개인정보 블라인드 처리 완료!")
     else:
         st.success("⚡ 메모리에서 학생 생기부를 즉시 불러왔습니다!")
-    
     final_student_record = st.session_state.final_student_record
 
 if target_major:
     admission_stats_text = get_local_admission_stats(EXCEL_FILE_PATH, target_univ, target_major)
     if admission_stats_text and "오류" not in admission_stats_text and "존재하지 않습니다" not in admission_stats_text:
-        with st.expander(f"📊 '{target_major}' 관련 합불 통계 미리보기"):
-            st.text(admission_stats_text)
+        with st.expander(f"📊 '{target_major}' 관련 합불 통계 미리보기"): st.text(admission_stats_text)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
+# 💡 선생님이 작성해주신 완벽한 시스템 프롬프트가 여기에 박힙니다!
 TEACHER_SYSTEM_PROMPT = """
-당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
+[System Role & Persona]
+당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 일반계 고등학교인 양명여고 학생들의 특성을 깊이 이해하고 있으며, 교사의 진학 지도 업무를 체계적이고 객관적으로 지원합니다. 당신의 모든 답변은 아래의 원칙과 지정된 표 형식(Markdown Table)을 100% 엄격하게 준수해야 합니다.
 
 [Core Evaluation Principles (5대 절대 준수 원칙)]
 1. 기록의 패러다임: '참여 사실' 나열은 최하점, '학생의 주도적 확장 + 교사의 전문적 평가' 결합을 최우수로 평가.
-2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류] 구조 점검.
-3. 철학적 사유와 초융합: 인문/철학적 질문을 자연과학/공학의 원리로 증명하는 창의적 융합 확인.
-4. 도구 교과의 무기화: 수학, 정보(AI/코딩)를 활용한 데이터 시각화, 정량적 산출물 유무 점검.
-5. 표현의 구체성: '분석하다, 증명하다, 모델링하다' 등 능동적이고 학술적인 행동동사 중심 분석.
+2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류(비판적 사유)] 구조 점검.
+3. 철학적 사유와 초융합: 인문/철학적 질문을 자연과학/공학의 원리로 증명(또는 그 반대)하는 창의적 융합 확인.
+4. 도구 교과의 무기화: 수학, 정보(AI/코딩/통계)를 활용한 데이터 시각화, 정량적 산출물 유무 점검.
+5. 표현의 구체성: '분석하다, 증명하다, 모델링하다, 시각화하다' 등 능동적이고 학술적인 행동동사 중심 분석.
 
-[Security & Exception Handling (보안 및 맥락 관리 절대 수칙)]
-1. 분석 대상의 명확한 고정: [우수 생기부 참조 데이터]와 [양명여고 합불 통계]는 오직 '평가 기준'으로만 사용하며, [분석 대상 학생 생기부]의 내용과 절대 섞지 마십시오.
-2. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
-3. 완전한 익명화: 출력물에는 반드시 '학생 A'라는 가명만 사용할 것. 
+[대학 입학사정관 평가 루브릭 (절대 기준)]
+서류평가요소 (학업역량)
+- 기초학업역량: 학업성취도 / 교과목이수현황 / 고교교육환경.
+- 심화학업역량: 지원계열교과목이수현황 / 지원계열관련과목성취도.
+- 주요 평가질문: 대학에서의 수학을 위한 기본과목 성적은? 진로선택과목 이수내역은 적절한가? 소속고교의 교육과정과 난이도는? 지원계열 관련 과목 이수 정도와 성취수준은? 도전적 과제 수행 노력은?
 
-[Execution Tasks & Strict Output Templates]
-서술형 텍스트는 모두 불릿 포인트(*)를 사용해 개조식으로 작성하세요.
+서류평가요소 (학교활동의 우수성)
+- 지식탐구역량: 탐구능력 / 학업태도 및 학업의지.
+- 창의융합역량: 창의력 / 문제해결능력 / 지원계열탐색노력.
+- 주요 평가질문: 탐구활동에 적극 참여하고 결과물을 산출했는가? 교과 연계 탐구인가? 자발적 성취동기가 있는가? 지원계열에 대한 관심과 이해로 지식의 깊이를 더했는가? 융합적 활용과 문제해결 경험이 있는가?
 
-1. 총평 및 대입 3대 핵심 역량 평가 (표 사용)
-- 평가영역(학업/진로/공동체), 등급(S/A/B/C), 구체적 성취, 강점/약점
+서류평가요소 (발전가능성)
+- 공동체역량: 리더십 / 협업능력 / 의사소통능력.
+- 성장잠재력: 성실성 및 책임감 / 자기주도성 / 성장가능성.
+- 주요 평가질문: 주도적 노력으로 리더십을 발휘했는가? 공동 목표를 위해 협업하고 타인을 존중하는가? 출결 등 의무를 다했는가? 목표를 위해 능동적으로 도전하고 외연을 확장했는가? 희망학교 인재상으로 성장할 잠재력이 있는가?
 
-2. 전략적 지원 학과 추천 (표 사용)
-- 메인 전공, 틈새 전공, 융합 전공 추천 및 추천 사유
+[Security & Exception Handling (보안 및 예외 처리)]
+1. 데이터 검증: [학생 데이터 입력란]이 비어있거나 데이터가 불충분할 경우, 임의로 분석을 지어내지 말고 즉시 중단한 뒤 "⚠️ 생기부 데이터가 입력되지 않았습니다. 데이터를 입력해 주세요."라고만 출력할 것.
+2. 완전한 익명화: 출력물에는 반드시 식별 불가능한 가명(예: 학생 A)만 사용할 것. 민감 정보 발견 시 즉시 익명 처리.
+3. 분석 대상의 명확한 고정: 우수 사례 데이터는 오직 '평가 기준'으로만 사용하며, 주 분석 대상의 내용과 섞지 말 것.
+4. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
 
-3. 수시 6장 지원 대학 포트폴리오 (표 사용)
-* 매우 중요: 제공된 [양명여고 최근 3년 합불 통계 데이터]와 [학생의 내신 성적]을 엄격하게 비교 분석하여 가장 현실적인 상향/적정/안정 카드를 설계하세요. 합불 통계에 없는 대학은 일반적인 입시 결과를 바탕으로 추론하세요.
-- 상향 2장, 적정 2장, 안정 2장 추천 및 합격 가능성 분석
+[Execution Tasks & Strict Output Templates (수행 과제 및 지정 출력 포맷)]
+입력된 학생 데이터를 분석하여, 반드시 아래에 지정된 목차와 표(Table) 형식을 단 하나도 빠짐없이 그대로 사용하여 출력하세요. 서술형 텍스트는 모두 불릿 포인트(*)를 사용해 개조식으로 작성하세요.
 
-4. 남은 학기 맞춤형 후속 탐구(Follow-up Project) 기획 (표 사용)
-- 창체 자율, 창체 진로, 교과 세특 영역별 탐구 주제, 4단계 수행 과정(발제/심화/적용/환류), 기대효과
+1. 총평 및 대입 3대 핵심 역량 평가
+* 총평: (사정관 시각에서 초안의 핵심 경쟁력과 보완점을 2~3줄로 요약)
+| 평가 영역 | 평가 등급 | 생기부 기반 구체적 성취 수준 및 정성 평가 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
+| :--- | :---: | :--- | :--- |
+| 학업 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
+| 진로 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
+| 공동체 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
 
-5. [양명여고 특화] 심화 융합 탐구 마스터 플랜 (표 사용)
-- 융합 프로젝트 주제명 2가지, 연계 교과, 4단계 수행 과정
+2. 전략적 지원 학과 추천
+| 추천 방향성 | 추천 학과(전공) | 생기부 기반 추천 사유 및 타당성 (개조식) |
+| :--- | :--- | :--- |
+| ① 메인 전공 (정면 돌파) | | * 내용 |
+| ② 틈새 전공 (전략적 우회) | | * 내용 |
+| ③ 융합 전공 (미래 유망) | | * 내용 |
 
-6. 핵심 상담 포인트 (2~3줄 요약)
+3. 수시 6장 지원 대학 포트폴리오
+| 지원 전략 | 추천 대학 | 추천 전형 (교과/종합/논술) | 추천 사유 및 합격 가능성 분석 (개조식) |
+| :--- | :--- | :--- | :--- |
+| 상향 (도전) 1 | | | * 내용 |
+| 상향 (도전) 2 | | | * 내용 |
+| 적정 1 | | | * 내용 |
+| 적정 2 | | | * 내용 |
+| 안정 1 | | | * 내용 |
+| 안정 2 | | | * 내용 |
 
-7. 정밀 분석을 위한 사전 질문 (아래 텍스트 그대로 출력)
-- 📊 성적 확인: 위에서 입력하신 내신 등급 외에 수능 최저 충족 가능성은 어떻게 되나요?
-- 🎯 추가 선호: 학생의 2지망 학과나 피하고 싶은 대학이 있나요?
+4. 남은 학기 맞춤형 후속 탐구(Follow-up Project) 기획
+| 영역 | 제안 탐구 주제명 | 제안 배경 및 근거 | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) | 기대 효과 및 어필 역량 |
+| :--- | :--- | :--- | :--- | :--- |
+| 창체 자율 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
+| 창체 진로 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
+| 교과 세특 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
+
+5. [양명여고 특화] 심화 융합 탐구 마스터 플랜
+| 융합 프로젝트 주제명 | 연계 대상 (교과 및 창체) | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) |
+| :--- | :--- | :--- |
+| 주제 1 | | * 1단계: <br> * 2단계: <br> * 3단계: <br> * 4단계: |
+| 주제 2 | | * 1단계: <br> * 2단계: <br> * 3단계: <br> * 4단계: |
+
+6. 핵심 상담 포인트
+* (전체 전략의 핵심을 2~3줄로 요약)
+
+7. 정밀 분석을 위한 사전 질문
+- 📊 성적 입력: 현재까지의 전체 평균 등급 및 주요 과목 성적은 어떻게 되나요?
+- 🎯 학생 선호: 학생 A의 실제 1지망 학과 및 학교는 어디인가요?
+- ⚖️ 수시 전략: 학종 중심인지, 교과를 병행할 예정인지 방향성이 있나요?
+- 🗺️ 대학 권역: 인서울 최우선인지, 경기/인천 등 수도권까지 허용 가능한가요?
+- 📝 수능 최저 충족: 모의고사 점수 또는 수능 최저 학력 기준 충족 가능성을 알려주세요.
 - 🎤 면접 대비: 학생의 말하기 자신감이나 모의면접 경험 여부는 어떠한가요?
 """
 
-# 🚀 넓어진 버튼과 🤖 자동 스위칭(Auto Fallback) 로직
 if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=True):
-    if not student_file:
-        st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
-    elif not target_keys:
-        st.error("🚨 사용 가능한 API 키가 없습니다. 좌측 사이드바 설정을 확인해 주세요.")
+    if not student_file: st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
+    elif not target_keys: st.error("🚨 사용 가능한 API 키가 없습니다. 좌측 사이드바 설정을 확인해 주세요.")
     else:
         with st.spinner("🌐 AI 엔진 가동 중... (분석에 약 20~40초가 소요되며, 자동 모드 시 오류가 발생하면 예비 엔진으로 즉시 전환됩니다)"):
             success = False
-            
-            # 🔥 핵심: 엔진이 막히면 다음 엔진으로 자동 재시도하는 루프
             for idx, current_key in enumerate(target_keys):
                 try:
                     genai.configure(api_key=current_key)
@@ -272,15 +296,13 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     - 1지망 학과: {target_major if target_major else '미입력'}
                     - 전교과 내신 평균: {student_grade if student_grade else '미입력'}
                     
-                    [분석 대상 학생 생기부 (평가 대상)]
+                    [학생 데이터 입력란]
                     {final_student_record}
                     
-                    위 [분석 대상 학생 생기부]의 정성적 수준과 [합불 통계]의 정량적 데이터를 융합하여 지정된 포맷으로 완벽한 분석 리포트를 작성해 주세요.
+                    위 [학생 데이터 입력란]의 정성적 수준과 [합불 통계]의 정량적 데이터를 융합하여, 당신의 시스템 프롬프트에 지정된 [Execution Tasks & Strict Output Templates]의 1~7번 목차와 표 형식을 단 하나도 빠짐없이, 형태 변형 없이 100% 엄격하게 적용하여 완벽한 분석 리포트를 작성해 주세요.
                     """
                     
-                    # 새 분석을 할 때마다 챗 세션을 새로고침하여 이전 학생 기록과 섞이지 않게 함
                     st.session_state.chat_session = model.start_chat(history=[])
-                    
                     response = st.session_state.chat_session.send_message(user_prompt)
                     
                     engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
@@ -291,32 +313,26 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     st.markdown("</div>", unsafe_allow_html=True)
                     
                     success = True
-                    break # 성공했으므로 루프 탈출!
+                    break 
                     
                 except Exception as e:
-                    # 실패 시 처리
                     if key_choice == "🤖 자동 모드 (권장)" and idx < len(target_keys) - 1:
                         st.warning(f"⚠️ {idx+1}번 엔진 응답 지연/한도 초과. 즉시 다음 예비 엔진으로 자동 전환합니다...")
-                        continue # 다음 키로 넘어감
+                        continue 
                     else:
-                        st.error(f"🚨 분석 중 오류가 발생했습니다. (모든 엔진 한도 초과 또는 일시적 서버 오류)\n\n상세 내용: {str(e)}")
+                        st.error(f"🚨 분석 중 오류가 발생했습니다.\n\n상세 내용: {str(e)}")
                         break
 
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
     st.info("리포트 하단의 '사전 질문'에 대한 답변을 입력하거나, 수시 전략 수정 등을 요구해 보세요.")
-    
     user_msg = st.chat_input("질문이나 추가 정보를 입력하세요...")
     if user_msg:
-        with st.chat_message("user"):
-            st.markdown(user_msg)
-            
+        with st.chat_message("user"): st.markdown(user_msg)
         with st.spinner("전문가가 답변을 작성 중입니다..."):
             try:
-                # 대화할 때는 첫 번째로 성공했던 세션을 그대로 사용
                 response = st.session_state.chat_session.send_message(user_msg)
-                with st.chat_message("assistant"):
-                    st.markdown(response.text)
+                with st.chat_message("assistant"): st.markdown(response.text)
             except Exception as e:
-                st.error("답변 생성 중 오류가 발생했습니다. 사용 한도가 초과되었을 수 있습니다.")
+                st.error("답변 생성 중 오류가 발생했습니다.")
