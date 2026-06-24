@@ -101,13 +101,17 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important; width: 100%; margin-top: 15px !important;
     }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(29, 78, 216, 0.4) !important; }
+    div.stDownloadButton > button { width: 100%; font-weight: bold; border-radius: 10px; margin-top: 10px; }
     .report-box { background-color: white; border-top: 5px solid #2563EB; border-radius: 10px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px; font-size: 1.05rem; line-height: 1.7; }
     .upload-box { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #2563EB; }
     .status-box { background-color: #EFF6FF; padding: 20px; border-radius: 10px; border: 1px solid #BFDBFE; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background-color: #F1F5F9; text-align: left; padding: 12px; border: 1px solid #CBD5E1; }
+    td { padding: 12px; border: 1px solid #CBD5E1; vertical-align: top; }
 </style>
 """, unsafe_allow_html=True)
 
-# 🔑 트리플 API 키 가져오기 및 리스트화
+# 🔑 트리플 API 키 가져오기
 keys_list = []
 try: 
     if st.secrets["GEMINI_API_KEY_1"]: keys_list.append(st.secrets["GEMINI_API_KEY_1"])
@@ -184,45 +188,34 @@ if target_major:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 💡 선생님이 작성해주신 완벽한 시스템 프롬프트가 여기에 박힙니다!
+# 🔥 줄바꿈(Enter) 규칙이 추가된 강력한 프롬프트
 TEACHER_SYSTEM_PROMPT = """
 [System Role & Persona]
-당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 일반계 고등학교인 양명여고 학생들의 특성을 깊이 이해하고 있으며, 교사의 진학 지도 업무를 체계적이고 객관적으로 지원합니다. 당신의 모든 답변은 아래의 원칙과 지정된 표 형식(Markdown Table)을 100% 엄격하게 준수해야 합니다.
+당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
+
+[🚨 Markdown 표 작성 시 절대 준수 규칙 (매우 중요)]
+1. 표(Table)를 생성할 때 **반드시 각 행(Row)이 끝날 때마다 명확하게 줄바꿈(Enter/Newline)**을 하세요.
+2. 파이프 기호(|)로 구분된 표 내용이 한 줄의 긴 텍스트로 뭉쳐서 출력되면 마크다운이 깨집니다. 절대 뭉쳐서 출력하지 마세요.
+3. 지정된 표 양식을 그대로 복사해서 빈칸을 채우는 방식으로 작성하되, 줄바꿈이 유실되지 않도록 각별히 주의하세요.
 
 [Core Evaluation Principles (5대 절대 준수 원칙)]
 1. 기록의 패러다임: '참여 사실' 나열은 최하점, '학생의 주도적 확장 + 교사의 전문적 평가' 결합을 최우수로 평가.
-2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류(비판적 사유)] 구조 점검.
+2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류] 점검.
 3. 철학적 사유와 초융합: 인문/철학적 질문을 자연과학/공학의 원리로 증명(또는 그 반대)하는 창의적 융합 확인.
-4. 도구 교과의 무기화: 수학, 정보(AI/코딩/통계)를 활용한 데이터 시각화, 정량적 산출물 유무 점검.
-5. 표현의 구체성: '분석하다, 증명하다, 모델링하다, 시각화하다' 등 능동적이고 학술적인 행동동사 중심 분석.
+4. 도구 교과의 무기화: 수학, 정보(AI/코딩)를 활용한 정량적 산출물 유무 점검.
+5. 표현의 구체성: '분석하다, 증명하다, 모델링하다' 등 학술적인 행동동사 중심 분석.
 
-[대학 입학사정관 평가 루브릭 (절대 기준)]
-서류평가요소 (학업역량)
-- 기초학업역량: 학업성취도 / 교과목이수현황 / 고교교육환경.
-- 심화학업역량: 지원계열교과목이수현황 / 지원계열관련과목성취도.
-- 주요 평가질문: 대학에서의 수학을 위한 기본과목 성적은? 진로선택과목 이수내역은 적절한가? 소속고교의 교육과정과 난이도는? 지원계열 관련 과목 이수 정도와 성취수준은? 도전적 과제 수행 노력은?
+[Security & Exception Handling]
+1. 데이터 검증: 데이터가 없으면 "⚠️ 생기부 데이터가 입력되지 않았습니다. 데이터를 입력해 주세요."라고만 출력.
+2. 완전한 익명화: 식별 불가능한 가명(예: 학생 A)만 사용할 것. 
+3. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
 
-서류평가요소 (학교활동의 우수성)
-- 지식탐구역량: 탐구능력 / 학업태도 및 학업의지.
-- 창의융합역량: 창의력 / 문제해결능력 / 지원계열탐색노력.
-- 주요 평가질문: 탐구활동에 적극 참여하고 결과물을 산출했는가? 교과 연계 탐구인가? 자발적 성취동기가 있는가? 지원계열에 대한 관심과 이해로 지식의 깊이를 더했는가? 융합적 활용과 문제해결 경험이 있는가?
-
-서류평가요소 (발전가능성)
-- 공동체역량: 리더십 / 협업능력 / 의사소통능력.
-- 성장잠재력: 성실성 및 책임감 / 자기주도성 / 성장가능성.
-- 주요 평가질문: 주도적 노력으로 리더십을 발휘했는가? 공동 목표를 위해 협업하고 타인을 존중하는가? 출결 등 의무를 다했는가? 목표를 위해 능동적으로 도전하고 외연을 확장했는가? 희망학교 인재상으로 성장할 잠재력이 있는가?
-
-[Security & Exception Handling (보안 및 예외 처리)]
-1. 데이터 검증: [학생 데이터 입력란]이 비어있거나 데이터가 불충분할 경우, 임의로 분석을 지어내지 말고 즉시 중단한 뒤 "⚠️ 생기부 데이터가 입력되지 않았습니다. 데이터를 입력해 주세요."라고만 출력할 것.
-2. 완전한 익명화: 출력물에는 반드시 식별 불가능한 가명(예: 학생 A)만 사용할 것. 민감 정보 발견 시 즉시 익명 처리.
-3. 분석 대상의 명확한 고정: 우수 사례 데이터는 오직 '평가 기준'으로만 사용하며, 주 분석 대상의 내용과 섞지 말 것.
-4. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
-
-[Execution Tasks & Strict Output Templates (수행 과제 및 지정 출력 포맷)]
-입력된 학생 데이터를 분석하여, 반드시 아래에 지정된 목차와 표(Table) 형식을 단 하나도 빠짐없이 그대로 사용하여 출력하세요. 서술형 텍스트는 모두 불릿 포인트(*)를 사용해 개조식으로 작성하세요.
+[Execution Tasks & Strict Output Templates]
+반드시 아래의 목차와 표(Table) 형식을 단 하나도 빠짐없이, 정확한 마크다운 줄바꿈을 유지하며 출력하세요.
 
 1. 총평 및 대입 3대 핵심 역량 평가
 * 총평: (사정관 시각에서 초안의 핵심 경쟁력과 보완점을 2~3줄로 요약)
+
 | 평가 영역 | 평가 등급 | 생기부 기반 구체적 성취 수준 및 정성 평가 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
 | :--- | :---: | :--- | :--- |
 | 학업 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
@@ -230,6 +223,7 @@ TEACHER_SYSTEM_PROMPT = """
 | 공동체 역량 | [S/A/B/C] | * 내용 | * 강점: <br> * 약점: |
 
 2. 전략적 지원 학과 추천
+
 | 추천 방향성 | 추천 학과(전공) | 생기부 기반 추천 사유 및 타당성 (개조식) |
 | :--- | :--- | :--- |
 | ① 메인 전공 (정면 돌파) | | * 내용 |
@@ -237,6 +231,7 @@ TEACHER_SYSTEM_PROMPT = """
 | ③ 융합 전공 (미래 유망) | | * 내용 |
 
 3. 수시 6장 지원 대학 포트폴리오
+
 | 지원 전략 | 추천 대학 | 추천 전형 (교과/종합/논술) | 추천 사유 및 합격 가능성 분석 (개조식) |
 | :--- | :--- | :--- | :--- |
 | 상향 (도전) 1 | | | * 내용 |
@@ -247,6 +242,7 @@ TEACHER_SYSTEM_PROMPT = """
 | 안정 2 | | | * 내용 |
 
 4. 남은 학기 맞춤형 후속 탐구(Follow-up Project) 기획
+
 | 영역 | 제안 탐구 주제명 | 제안 배경 및 근거 | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) | 기대 효과 및 어필 역량 |
 | :--- | :--- | :--- | :--- | :--- |
 | 창체 자율 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
@@ -254,6 +250,7 @@ TEACHER_SYSTEM_PROMPT = """
 | 교과 세특 | | * 내용 | * 1단계(발제): <br> * 2단계(심화): <br> * 3단계(적용): <br> * 4단계(환류): | * 내용 |
 
 5. [양명여고 특화] 심화 융합 탐구 마스터 플랜
+
 | 융합 프로젝트 주제명 | 연계 대상 (교과 및 창체) | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) |
 | :--- | :--- | :--- |
 | 주제 1 | | * 1단계: <br> * 2단계: <br> * 3단계: <br> * 4단계: |
@@ -275,7 +272,7 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
     if not student_file: st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
     elif not target_keys: st.error("🚨 사용 가능한 API 키가 없습니다. 좌측 사이드바 설정을 확인해 주세요.")
     else:
-        with st.spinner("🌐 AI 엔진 가동 중... (분석에 약 20~40초가 소요되며, 자동 모드 시 오류가 발생하면 예비 엔진으로 즉시 전환됩니다)"):
+        with st.spinner("🌐 AI 엔진 가동 중... (표 양식을 맞추어 생성 중이므로 약 30~40초가 소요됩니다)"):
             success = False
             for idx, current_key in enumerate(target_keys):
                 try:
@@ -298,8 +295,6 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     
                     [학생 데이터 입력란]
                     {final_student_record}
-                    
-                    위 [학생 데이터 입력란]의 정성적 수준과 [합불 통계]의 정량적 데이터를 융합하여, 당신의 시스템 프롬프트에 지정된 [Execution Tasks & Strict Output Templates]의 1~7번 목차와 표 형식을 단 하나도 빠짐없이, 형태 변형 없이 100% 엄격하게 적용하여 완벽한 분석 리포트를 작성해 주세요.
                     """
                     
                     st.session_state.chat_session = model.start_chat(history=[])
@@ -308,16 +303,27 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
                     st.success(f"✅ {engine_name}으로 심층 분석 리포트가 완성되었습니다!")
                     
+                    # 리포트 출력
                     st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                     st.markdown(response.text)
                     st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    # 📥 다운로드 버튼 추가
+                    st.download_button(
+                        label="📥 생성된 분석 리포트 다운로드 (.md 파일)",
+                        data=response.text,
+                        file_name=f"양명여고_생기부분석_{target_major if target_major else '결과'}.md",
+                        mime="text/markdown"
+                    )
+                    
+                    st.info("💡 **PDF 저장 꿀팁:** 리포트 화면을 표와 디자인이 유지된 채로 가장 예쁘게 PDF로 저장하시려면, 키보드 **`Ctrl + P` (맥은 `Cmd + P`)**를 누르시고 **[PDF로 저장]**을 선택하시는 것이 가장 완벽합니다!")
                     
                     success = True
                     break 
                     
                 except Exception as e:
                     if key_choice == "🤖 자동 모드 (권장)" and idx < len(target_keys) - 1:
-                        st.warning(f"⚠️ {idx+1}번 엔진 응답 지연/한도 초과. 즉시 다음 예비 엔진으로 자동 전환합니다...")
+                        st.warning(f"⚠️ {idx+1}번 엔진 한도 초과. 즉시 다음 예비 엔진으로 자동 전환합니다...")
                         continue 
                     else:
                         st.error(f"🚨 분석 중 오류가 발생했습니다.\n\n상세 내용: {str(e)}")
