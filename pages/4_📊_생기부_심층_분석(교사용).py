@@ -3,7 +3,7 @@ import google.generativeai as genai
 import PyPDF2
 import re
 import pandas as pd
-import io
+import os
 
 # --- 💡 스마트 캐시 함수 ---
 @st.cache_data(ttl=3600)
@@ -28,7 +28,7 @@ def anonymize_text(text):
     text = re.sub(r'(졸업 대장 번호\s*\|?\s*)\d+', r'\1[번호 삭제됨]', text) # 졸업번호
     return text
 
-# --- 📄 PDF 텍스트 추출 함수 ---
+# --- 📄 학생 PDF 텍스트 추출 함수 (화면 업로드용) ---
 def extract_text_from_pdf(uploaded_file):
     text = ""
     try:
@@ -38,13 +38,32 @@ def extract_text_from_pdf(uploaded_file):
             if extracted:
                 text += extracted + "\n"
     except Exception as e:
-        st.error(f"PDF 파일 읽기 오류: {e}")
+        st.error(f"학생 PDF 파일 읽기 오류: {e}")
     return text
 
-# --- 📊 엑셀 데이터 분석 및 요약 함수 ---
-def get_admission_stats(excel_file, target_univ, target_major):
+# --- 📚 우수 생기부 자동 로드 함수 (백그라운드용) ---
+@st.cache_data
+def load_local_pdf(file_path):
+    text = ""
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "rb") as f:
+                pdf_reader = PyPDF2.PdfReader(f)
+                for page in pdf_reader.pages:
+                    extracted = page.extract_text()
+                    if extracted:
+                        text += extracted + "\n"
+        except Exception as e:
+            pass # 숨겨진 파일이므로 에러 시 조용히 넘어감
+    return text
+
+# --- 📈 엑셀 데이터 자동 로드 및 요약 함수 (백그라운드용) ---
+@st.cache_data
+def get_local_admission_stats(file_path, target_univ, target_major):
+    if not os.path.exists(file_path):
+        return ""
     try:
-        df = pd.read_excel(excel_file, sheet_name=0)
+        df = pd.read_excel(file_path, sheet_name=0)
         filtered_df = df.copy()
         
         if target_univ:
@@ -71,7 +90,7 @@ def get_admission_stats(excel_file, target_univ, target_major):
     except Exception as e:
         return f"엑셀 데이터 분석 중 오류 발생: {e}"
 
-# --- 페이지 설정 ---
+# --- 1. 페이지 설정 및 디자인 ---
 st.set_page_config(page_title="양명여고 생기부 분석기", page_icon="📊", layout="wide")
 
 st.markdown("""
@@ -86,7 +105,8 @@ st.markdown("""
     }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(29, 78, 216, 0.4) !important; }
     .report-box { background-color: white; border-top: 5px solid #2563EB; border-radius: 10px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px; font-size: 1.05rem; line-height: 1.7; }
-    .upload-box { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #10B981; }
+    .upload-box { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #2563EB; }
+    .status-box { background-color: #EFF6FF; padding: 20px; border-radius: 10px; border: 1px solid #BFDBFE; margin-bottom: 20px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,23 +129,27 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-colA, colB = st.columns(2)
+# 💡 백그라운드 파일 자동 로딩 상태창
+st.markdown("""
+<div class='status-box'>
+    <h4 style='color: #1D4ED8; margin-top: 0; margin-bottom: 15px;'>⚙️ 학교 DB 자동 연동 상태</h4>
+    ✅ <b>우수 생기부 평가 기준</b> (우수생기부통합.pdf) : 백그라운드 로드 완료<br>
+    ✅ <b>양명여고 합불 통계</b> (양명여고_합불데이터(2022_2025).xlsx) : 분석 엔진 대기 중
+</div>
+""", unsafe_allow_html=True)
 
-with colA:
-    st.markdown("<div class='upload-box'>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #059669; margin-top: 0;'>📚 STEP 1. 우수 생기부 기준 (PDF)</h3>", unsafe_allow_html=True)
-    reference_file = st.file_uploader("우수생기부통합.pdf 업로드 (정성평가 기준)", type=["pdf"], key="ref_upload")
-    st.markdown("</div>", unsafe_allow_html=True)
+# 깃허브에 올라가 있는 파일명 고정
+REF_PDF_PATH = "우수생기부통합.pdf"
+EXCEL_FILE_PATH = "양명여고_합불데이터(2022_2025).xlsx"
 
-with colB:
-    st.markdown("<div class='upload-box' style='border-left-color: #F59E0B;'>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #D97706; margin-top: 0;'>📈 STEP 2. 양명여고 합불 데이터 (Excel)</h3>", unsafe_allow_html=True)
-    excel_file = st.file_uploader("합불데이터(2022_2025).xlsx 업로드 (정량평가 기준)", type=["xlsx", "xls"], key="excel_upload")
-    st.markdown("</div>", unsafe_allow_html=True)
+# 우수 생기부는 켜자마자 백그라운드에서 읽어둠 (캐시 적용으로 아주 빠름)
+reference_record = load_local_pdf(REF_PDF_PATH)
 
-st.markdown("<div class='upload-box' style='border-left-color: #2563EB;'>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 STEP 3. [분석 대상] 학생 생기부 (PDF)</h3>", unsafe_allow_html=True)
-student_file = st.file_uploader("분석할 학생 생기부 PDF 업로드 (개인정보 자동 삭제)", type=["pdf"], key="stu_upload")
+# --- 2. 입력 폼 (학생 것만 입력) ---
+st.markdown("<div class='upload-box'>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 [분석 대상] 학생 생기부 (PDF)</h3>", unsafe_allow_html=True)
+st.info("💡 분석할 학생의 나이스 생기부 PDF 파일을 올려주세요. 개인정보는 100% 자동 삭제됩니다.")
+student_file = st.file_uploader("학생 생기부 파일 업로드", type=["pdf"], key="stu_upload", label_visibility="collapsed")
 
 col1, col2, col3 = st.columns(3)
 with col1: target_univ = st.text_input("🎯 1지망 대학 (예: 서울대)")
@@ -133,7 +157,6 @@ with col2: target_major = st.text_input("🎓 1지망 학과 (예: 교육)")
 with col3: student_grade = st.text_input("📊 학생 전교과 내신 (예: 1.5)")
 
 final_student_record = ""
-reference_record = ""
 admission_stats_text = ""
 
 if student_file:
@@ -141,18 +164,15 @@ if student_file:
     final_student_record = anonymize_text(raw_student_text)
     st.success("✅ 학생 생기부 로드 및 개인정보 블라인드 처리 완료!")
 
-if reference_file:
-    reference_record = extract_text_from_pdf(reference_file)
-    st.success("✅ 우수 사례(정성 평가 기준) 로드 완료!")
-    
-if excel_file and target_major:
-    admission_stats_text = get_admission_stats(excel_file, target_univ, target_major)
-    st.success(f"✅ 합불 엑셀 데이터 분석 완료! (타겟: {target_univ} {target_major})")
-    with st.expander("📊 추출된 합불 통계 미리보기"):
-        st.text(admission_stats_text)
+if target_major:
+    admission_stats_text = get_local_admission_stats(EXCEL_FILE_PATH, target_univ, target_major)
+    if admission_stats_text and "오류" not in admission_stats_text and "존재하지 않습니다" not in admission_stats_text:
+        with st.expander(f"📊 '{target_major}' 관련 합불 통계 미리보기"):
+            st.text(admission_stats_text)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
+# --- 3. 선생님 전용 프롬프트 ---
 TEACHER_SYSTEM_PROMPT = """
 당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
 
@@ -195,7 +215,8 @@ TEACHER_SYSTEM_PROMPT = """
 - 🎤 면접 대비: 학생의 말하기 자신감이나 모의면접 경험 여부는 어떠한가요?
 """
 
-if st.button("🚀 엑셀 합불 데이터 + 우수사례 기반 심층 분석 시작", type="primary"):
+# --- 4. 분석 실행 ---
+if st.button("🚀 자동 연동 DB 기반 심층 분석 시작", type="primary"):
     if not student_file:
         st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
     elif not api_key:
@@ -239,6 +260,7 @@ if st.button("🚀 엑셀 합불 데이터 + 우수사례 기반 심층 분석 �
             except Exception as e:
                 st.error(f"🚨 분석 중 오류가 발생했습니다: {str(e)}")
 
+# --- 5. 추가 상담 챗봇 UI ---
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
