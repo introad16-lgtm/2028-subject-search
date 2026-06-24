@@ -85,6 +85,16 @@ st.markdown("""
         border-color: #FF7F50 !important;
     }
 
+    /* 💎 4. 교사용 생기부 심층 분석기 (스카이블루 - 신규 추가) */
+    div[data-testid="stHorizontalBlock"] > div:nth-child(4) button { border: 4px solid #3B82F6 !important; }
+    div[data-testid="stHorizontalBlock"] > div:nth-child(4) button strong { color: #1D4ED8 !important; }
+    div[data-testid="stHorizontalBlock"] > div:nth-child(4) button:hover {
+        transform: translateY(-10px) !important;
+        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3) !important;
+        background-color: #EFF6FF !important;
+        border-color: #2563EB !important;
+    }
+
     /* -----------------------------------------------------------
        📱 모바일 메인 타이틀 반응형 조절
     ----------------------------------------------------------- */
@@ -113,8 +123,8 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. 버튼형 카드 레이아웃
-col1, col2, col3 = st.columns(3)
+# 4. 버튼형 카드 레이아웃 (4열로 변경)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     if st.button("**🎓 권장과목 검색기**\n\n2028학년도 대학별 필수 과목을\n빠르고 정확하게 검색합니다.", use_container_width=True):
@@ -127,5 +137,10 @@ with col2:
 with col3:
     if st.button("**📊 내신 등급 산출기**\n\n2028학년도 5등급제 성적을\n대학별 기준에 맞춰 자동 환산합니다.", use_container_width=True):
         st.switch_page("pages/3_📊_내신_등급_산출기.py")
+
+with col4:
+    # 4번째 교사용 심층 분석기 버튼 추가
+    if st.button("**👑 교사용 컨설팅**\n\n합불 데이터와 우수사례를 융합해\n학생 생기부를 정밀 분석합니다.", use_container_width=True):
+        st.switch_page("pages/3_📊_생기부_심층_분석(교사용).py")
 
 st.sidebar.info("💖 양명여고 학생들의 밝은 미래를 응원합니다!")
