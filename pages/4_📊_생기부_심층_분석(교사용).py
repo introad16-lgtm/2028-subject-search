@@ -107,32 +107,39 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 🔑 트리플 API 키 가져오기
-try: api_key_1 = st.secrets["GEMINI_API_KEY_1"]
-except: api_key_1 = None
-
-try: api_key_2 = st.secrets["GEMINI_API_KEY_2"]
-except: api_key_2 = None
-
-try: api_key_3 = st.secrets["GEMINI_API_KEY_3"]
-except: api_key_3 = None
+# 🔑 트리플 API 키 가져오기 및 리스트화
+keys_list = []
+try: 
+    if st.secrets["GEMINI_API_KEY_1"]: keys_list.append(st.secrets["GEMINI_API_KEY_1"])
+except: pass
+try: 
+    if st.secrets["GEMINI_API_KEY_2"]: keys_list.append(st.secrets["GEMINI_API_KEY_2"])
+except: pass
+try: 
+    if st.secrets["GEMINI_API_KEY_3"]: keys_list.append(st.secrets["GEMINI_API_KEY_3"])
+except: pass
 
 with st.sidebar:
     st.markdown("### 🔐 교사 전용 모드 (트리플 엔진)")
     
-    key_choice = st.radio("사용할 AI 계정 선택:", ["계정 1 (메인)", "계정 2 (예비 1)", "계정 3 (예비 2)"])
+    # 🤖 자동 모드 옵션 추가
+    key_choice = st.radio("사용할 AI 계정 선택:", ["🤖 자동 모드 (권장)", "계정 1 (메인)", "계정 2 (예비 1)", "계정 3 (예비 2)"])
     
-    if key_choice == "계정 1 (메인)":
-        api_key = api_key_1
-    elif key_choice == "계정 2 (예비 1)":
-        api_key = api_key_2
+    if key_choice == "🤖 자동 모드 (권장)":
+        target_keys = keys_list
+        st.success(f"✅ 자동 모드 가동 중! (가용 엔진: {len(keys_list)}개)")
+    elif key_choice == "계정 1 (메인)" and len(keys_list) >= 1:
+        target_keys = [keys_list[0]]
+        st.success("✅ 계정 1 수동 연결!")
+    elif key_choice == "계정 2 (예비 1)" and len(keys_list) >= 2:
+        target_keys = [keys_list[1]]
+        st.success("✅ 계정 2 수동 연결!")
+    elif key_choice == "계정 3 (예비 2)" and len(keys_list) >= 3:
+        target_keys = [keys_list[2]]
+        st.success("✅ 계정 3 수동 연결!")
     else:
-        api_key = api_key_3
-        
-    if api_key: 
-        st.success(f"✅ {key_choice} 연결 정상!")
-    else: 
-        st.error(f"🚨 {key_choice}의 API 키가 올바르지 않거나 없습니다.")
+        target_keys = []
+        st.error("🚨 선택한 계정의 API 키가 없습니다.")
         
     st.markdown("---")
     st.markdown("**양명여자고등학교 진로진학부**")
@@ -172,10 +179,18 @@ with col3: student_grade = st.text_input("📊 학생 전교과 내신 (예: 1.5
 final_student_record = ""
 admission_stats_text = ""
 
+# ⚡ PDF 추출 속도 개선 코드
 if student_file:
-    raw_student_text = extract_text_from_pdf(student_file)
-    final_student_record = anonymize_text(raw_student_text)
-    st.success("✅ 학생 생기부 로드 및 개인정보 블라인드 처리 완료!")
+    if "current_file_name" not in st.session_state or st.session_state.current_file_name != student_file.name:
+        with st.spinner("📄 생기부 텍스트 추출 및 마스킹 작업 중... (최초 1회만 진행되며 약 5~10초 소요됩니다)"):
+            raw_student_text = extract_text_from_pdf(student_file)
+            st.session_state.final_student_record = anonymize_text(raw_student_text)
+            st.session_state.current_file_name = student_file.name
+            st.success("✅ 학생 생기부 로드 및 개인정보 블라인드 처리 완료!")
+    else:
+        st.success("⚡ 메모리에서 학생 생기부를 즉시 불러왔습니다!")
+    
+    final_student_record = st.session_state.final_student_record
 
 if target_major:
     admission_stats_text = get_local_admission_stats(EXCEL_FILE_PATH, target_univ, target_major)
@@ -227,50 +242,65 @@ TEACHER_SYSTEM_PROMPT = """
 - 🎤 면접 대비: 학생의 말하기 자신감이나 모의면접 경험 여부는 어떠한가요?
 """
 
-# 👇 변경된 부분: 버튼 텍스트를 "🚀 AI 생기부 분석"으로 교체하고 전체 너비(use_container_width=True) 적용!
+# 🚀 넓어진 버튼과 🤖 자동 스위칭(Auto Fallback) 로직
 if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=True):
     if not student_file:
         st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
-    elif not api_key:
-        st.error("🚨 선택된 계정의 API 키가 설정되지 않았습니다. 좌측 사이드바를 확인해 주세요.")
+    elif not target_keys:
+        st.error("🚨 사용 가능한 API 키가 없습니다. 좌측 사이드바 설정을 확인해 주세요.")
     else:
-        with st.spinner(f"🌐 {key_choice} 엔진으로 합불 통계와 우수 사례 바탕 정밀 분석 중입니다..."):
-            try:
-                genai.configure(api_key=api_key)
-                chosen_model = get_best_model(api_key)
-                model = genai.GenerativeModel(model_name=chosen_model, system_instruction=TEACHER_SYSTEM_PROMPT)
-                
-                ref_text_block = f"[우수 생기부 참조 데이터 (평가 기준)]\n{reference_record}\n" if reference_record else ""
-                stats_text_block = f"[양명여고 최근 3년 합불 통계 (수시 6장 설계 기준)]\n{admission_stats_text}\n" if admission_stats_text else ""
-                
-                user_prompt = f"""
-                {ref_text_block}
-                {stats_text_block}
-                
-                --------------------------------------------------
-                [분석 대상 학생 정보]
-                - 1지망 대학: {target_univ if target_univ else '미입력'}
-                - 1지망 학과: {target_major if target_major else '미입력'}
-                - 전교과 내신 평균: {student_grade if student_grade else '미입력'}
-                
-                [분석 대상 학생 생기부 (평가 대상)]
-                {final_student_record}
-                
-                위 [분석 대상 학생 생기부]의 정성적 수준과 [합불 통계]의 정량적 데이터를 융합하여 지정된 포맷으로 완벽한 분석 리포트를 작성해 주세요.
-                """
-                
-                if "chat_session" not in st.session_state:
+        with st.spinner("🌐 AI 엔진 가동 중... (분석에 약 20~40초가 소요되며, 자동 모드 시 오류가 발생하면 예비 엔진으로 즉시 전환됩니다)"):
+            success = False
+            
+            # 🔥 핵심: 엔진이 막히면 다음 엔진으로 자동 재시도하는 루프
+            for idx, current_key in enumerate(target_keys):
+                try:
+                    genai.configure(api_key=current_key)
+                    chosen_model = get_best_model(current_key)
+                    model = genai.GenerativeModel(model_name=chosen_model, system_instruction=TEACHER_SYSTEM_PROMPT)
+                    
+                    ref_text_block = f"[우수 생기부 참조 데이터 (평가 기준)]\n{reference_record}\n" if reference_record else ""
+                    stats_text_block = f"[양명여고 최근 3년 합불 통계 (수시 6장 설계 기준)]\n{admission_stats_text}\n" if admission_stats_text else ""
+                    
+                    user_prompt = f"""
+                    {ref_text_block}
+                    {stats_text_block}
+                    
+                    --------------------------------------------------
+                    [분석 대상 학생 정보]
+                    - 1지망 대학: {target_univ if target_univ else '미입력'}
+                    - 1지망 학과: {target_major if target_major else '미입력'}
+                    - 전교과 내신 평균: {student_grade if student_grade else '미입력'}
+                    
+                    [분석 대상 학생 생기부 (평가 대상)]
+                    {final_student_record}
+                    
+                    위 [분석 대상 학생 생기부]의 정성적 수준과 [합불 통계]의 정량적 데이터를 융합하여 지정된 포맷으로 완벽한 분석 리포트를 작성해 주세요.
+                    """
+                    
+                    # 새 분석을 할 때마다 챗 세션을 새로고침하여 이전 학생 기록과 섞이지 않게 함
                     st.session_state.chat_session = model.start_chat(history=[])
-                
-                response = st.session_state.chat_session.send_message(user_prompt)
-                st.success(f"✅ {key_choice} 엔진으로 심층 분석 리포트가 완성되었습니다!")
-                
-                st.markdown("<div class='report-box'>", unsafe_allow_html=True)
-                st.markdown(response.text)
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"🚨 분석 중 오류가 발생했습니다: {str(e)}")
+                    
+                    response = st.session_state.chat_session.send_message(user_prompt)
+                    
+                    engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
+                    st.success(f"✅ {engine_name}으로 심층 분석 리포트가 완성되었습니다!")
+                    
+                    st.markdown("<div class='report-box'>", unsafe_allow_html=True)
+                    st.markdown(response.text)
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    success = True
+                    break # 성공했으므로 루프 탈출!
+                    
+                except Exception as e:
+                    # 실패 시 처리
+                    if key_choice == "🤖 자동 모드 (권장)" and idx < len(target_keys) - 1:
+                        st.warning(f"⚠️ {idx+1}번 엔진 응답 지연/한도 초과. 즉시 다음 예비 엔진으로 자동 전환합니다...")
+                        continue # 다음 키로 넘어감
+                    else:
+                        st.error(f"🚨 분석 중 오류가 발생했습니다. (모든 엔진 한도 초과 또는 일시적 서버 오류)\n\n상세 내용: {str(e)}")
+                        break
 
 st.write("---")
 if "chat_session" in st.session_state:
@@ -284,8 +314,9 @@ if "chat_session" in st.session_state:
             
         with st.spinner("전문가가 답변을 작성 중입니다..."):
             try:
+                # 대화할 때는 첫 번째로 성공했던 세션을 그대로 사용
                 response = st.session_state.chat_session.send_message(user_msg)
                 with st.chat_message("assistant"):
                     st.markdown(response.text)
             except Exception as e:
-                st.error("답변 생성 중 오류가 발생했습니다.")
+                st.error("답변 생성 중 오류가 발생했습니다. 사용 한도가 초과되었을 수 있습니다.")
