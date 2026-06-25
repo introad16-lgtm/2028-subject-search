@@ -111,14 +111,14 @@ st.markdown("""
     }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(29, 78, 216, 0.4) !important; }
     div.stDownloadButton > button { width: 100%; font-weight: bold; border-radius: 10px; margin-top: 10px; }
-    .report-box { background-color: white; border-top: 5px solid #2563EB; border-radius: 10px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px; font-size: 1.05rem; line-height: 1.8; }
+    .report-box { background-color: white; border-top: 5px solid #2563EB; border-radius: 10px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px; font-size: 1.05rem; line-height: 1.7; }
     .upload-box { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #2563EB; }
     .status-box { background-color: #EFF6FF; padding: 20px; border-radius: 10px; border: 1px solid #BFDBFE; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; margin-top: 10px; }
-    th { background-color: #F1F5F9; text-align: left; padding: 15px; border: 1px solid #CBD5E1; font-weight: 900; }
-    td { padding: 15px; border: 1px solid #CBD5E1; vertical-align: top; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background-color: #F1F5F9; text-align: left; padding: 12px; border: 1px solid #CBD5E1; }
+    td { padding: 12px; border: 1px solid #CBD5E1; vertical-align: top; }
     
-    /* 🔥 인쇄(PDF 저장) 시 리포트 외 메뉴 숨기기 */
+    /* 🔥 [핵심] 인쇄(PDF 저장) 시 리포트 외의 모든 지저분한 메뉴 숨기기 */
     @media print {
         [data-testid="stSidebar"], [data-testid="stHeader"], div[data-testid="stToolbar"] { display: none !important; }
         .stButton, .stDownloadButton, .upload-box, .status-box, iframe { display: none !important; }
@@ -179,6 +179,7 @@ st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 [분석 대상] 학
 st.info("💡 분석할 학생의 나이스 생기부 PDF 파일을 올려주세요. 개인정보는 100% 자동 삭제됩니다.")
 student_file = st.file_uploader("학생 생기부 파일 업로드", type=["pdf"], key="stu_upload", label_visibility="collapsed")
 
+# 📋 기본 인적 정보 입력란
 col1, col2, col3 = st.columns(3)
 with col1: target_univ = st.text_input("🎯 1지망 대학", placeholder="예: 서울대")
 with col2: target_major = st.text_input("🎓 1지망 학과", placeholder="예: 교육학과")
@@ -216,14 +217,12 @@ if target_major:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 🔥 프롬프트를 선생님이 원하셨던 '원래의 완벽한 표(Table) 양식'으로 완전 복구!
 TEACHER_SYSTEM_PROMPT = """
 [System Role & Persona]
 당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
 
 [🚨 마크다운 표 줄바꿈 절대 보존 원칙]
-- 표(Table) 안에서 여러 줄을 작성할 때는 반드시 `<br>` 태그를 사용하여 줄바꿈 하십시오. (일반 엔터/개행 기호를 사용하면 표 전체가 깨집니다.)
-- 각 표의 구조는 아래 템플릿과 100% 동일하게 작성하세요.
+- 표(Table)의 행(| 내용 |)을 생성할 때 마다 **반드시 줄바꿈(Enter/개행 기호)**을 철저히 지키십시오. 한 줄로 뭉치면 표가 깨집니다.
 
 [Core Evaluation Principles (5대 절대 준수 원칙)]
 1. 기록의 패러다임: '참여 사실' 나열은 최하점, '학생의 주도적 확장 + 교사의 전문적 평가' 결합을 최우수로 평가.
@@ -238,10 +237,11 @@ TEACHER_SYSTEM_PROMPT = """
 3. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
 
 [Execution Tasks & Strict Output Templates]
-선생님이 사전에 입력한 [사전 진단 맥락 정보]를 모든 역량 평가와 수시 포트폴리오 설계 시 유기적으로 결합하여 반영하되, 아래 지정된 1~6번 목차 양식만 엄격하게 출력하세요. 서술형 텍스트는 불릿 포인트(*)를 활용해 작성하세요.
+선생님이 사전에 입력한 [사전 진단 맥락 정보]를 모든 역량 평가와 수시 포트폴리오(상향/적정/안정 카드 배치) 설계 시 유기적으로 결합하여 반영하되, 아래 지정된 1~6번 목차 양식만 엄격하게 출력하세요.
 
 1. 총평 및 대입 3대 핵심 역량 평가
 * 총평: (사정관 시각에서 초안의 핵심 경쟁력과 보완점을 2~3줄로 요약)
+* 3대 역량 정성 평가: (학생의 수준을 판단하여 각 평가 영역별로 S, A, B, C 중 하나의 등급을 반드시 부여할 것)
 | 평가 영역 | 평가 등급 | 생기부 기반 구체적 성취 수준 및 정성 평가 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
 | :--- | :---: | :--- | :--- |
 | 학업 역량 | [S/A/B/C] | * 내용 <br> * 내용 | * 강점: 내용 <br> * 약점: 내용 |
@@ -256,7 +256,8 @@ TEACHER_SYSTEM_PROMPT = """
 | ③ 융합 전공 (미래 유망) | | * 내용 |
 
 3. 수시 6장 지원 대학 포트폴리오
-| 지원 전략 | 추천 대학 | 추천 전형 | 추천 사유 및 합격 가능성 분석 (개조식) |
+(제공된 선생님의 수시 전략, 권역 선호도, 수능 최저 충족 상황을 반영하여 리얼하게 포트폴리오를 설계할 것)
+| 지원 전략 | 추천 대학 | 추천 전형 (교과/종합/논술) | 추천 사유 및 합격 가능성 분석 (개조식) |
 | :--- | :--- | :--- | :--- |
 | 상향 (도전) 1 | | | * 내용 <br> * 내용 |
 | 상향 (도전) 2 | | | * 내용 <br> * 내용 |
@@ -319,7 +320,7 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     {final_student_record}
                     ======================================================================
                     
-                    최종 지시: 위 [3번]의 실제 학생 1명만을 대상으로 분석하세요. 마크다운 표 양식을 준수하여 리포트를 도출하십시오.
+                    최종 지시: 위 [1번 참조 데이터]에 압도되어 다른 인물을 추출하는 실수를 범하지 마십시오. 오직 [3번]의 실제 학생 1명만을 대상으로, 기입된 사전 진단 내역을 철저히 반영하여 수시 6장 카드와 핵심 상담 포인트를 극도로 현실성 있게 구성하세요. 마크다운 표 개행 규칙을 준수하여 1~6번 리포트를 단 하나의 덩어리로 작성하십시오.
                     """
                     
                     st.session_state.chat_session = model.start_chat(history=[])
@@ -328,7 +329,6 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
                     engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
                     st.success(f"✅ {engine_name}으로 심층 분석 리포트가 완성되었습니다!")
                     
-                    # 🔥 해결된 부분: <br> 텍스트 노출을 막고 진짜 줄바꿈으로 렌더링하도록 강제 설정!
                     st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                     st.markdown(response.text, unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
@@ -372,6 +372,7 @@ if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=Tru
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
+    st.info("리포트를 확인하신 후 수시 전략 수정 등을 요구나 추가 질문을 해보세요.")
     user_msg = st.chat_input("질문이나 추가 정보를 입력하세요...")
     if user_msg:
         with st.chat_message("user"): st.markdown(user_msg)
