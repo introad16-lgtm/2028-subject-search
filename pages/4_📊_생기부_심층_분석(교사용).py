@@ -112,6 +112,36 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
+# ========= 🔒 [신규] 교사 전용 보안 (비밀번호) 시스템 =========
+if "teacher_authenticated" not in st.session_state:
+    st.session_state.teacher_authenticated = False
+
+if not st.session_state.teacher_authenticated:
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1E3A8A;'>🔒 교사용 컨설팅 시스템 접근 인증</h2>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.info("💡 학생들의 민감한 성적 및 생기부 데이터를 다루는 교사 전용 메뉴입니다. 진로진학부 전용 비밀번호를 입력해 주세요.")
+        pwd = st.text_input("🔑 비밀번호", type="password", placeholder="비밀번호를 입력하세요")
+        
+        if st.button("입장하기", type="primary"):
+            # 🔥 아래 "양명진학" 부분을 선생님이 원하시는 비밀번호로 자유롭게 변경하세요!
+            if pwd == "양명진학":  
+                st.session_state.teacher_authenticated = True
+                st.rerun()  # 비밀번호가 맞으면 화면을 새로고침하여 본 페이지 진입!
+            else:
+                st.error("❌ 비밀번호가 일치하지 않습니다.")
+                
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🏠 메인 화면으로 돌아가기"):
+            st.switch_page("app.py")
+            
+    st.stop()  # 🚨 [중요] 비밀번호를 맞추기 전까지는 아래쪽 코드가 절대 실행되지 않게 막는 철벽 방어!
+# ==========================================================
+
+
 # API 키 세팅
 keys_list = []
 for i in range(1, 4):
@@ -127,8 +157,16 @@ with st.sidebar:
     elif key_choice == "계정 2 (예비 1)" and len(keys_list) >= 2: target_keys = [keys_list[1]]
     elif key_choice == "계정 3 (예비 2)" and len(keys_list) >= 3: target_keys = [keys_list[2]]
     else: target_keys = []
+    
+    st.markdown("---")
+    # 🔓 보안 모드 해제 (로그아웃) 버튼 추가
+    if st.button("🔓 로그아웃 (비밀번호 잠금)"):
+        st.session_state.teacher_authenticated = False
+        st.rerun()
+        
     st.markdown("---")
     st.markdown("**양명여자고등학교 진로진학부**")
+    
 if st.button("🏠 메인 화면으로 가기"): st.switch_page("app.py")
 
 st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-weight: 900; font-size: 3rem;'>📊 생기부 심층 분석기 (학년 통합)</h1>", unsafe_allow_html=True)
@@ -345,7 +383,6 @@ if st.button("🚀 선택 학년 AI 생기부 분석 실행", type="primary", us
     else:
         with st.spinner(f"🌐 {selected_grade} 맞춤형 분석 엔진 가동 중..."):
             
-            # 선택된 학년에 맞는 프롬프트 장전
             if "1학년" in selected_grade: current_sys_prompt = PROMPT_1
             elif "2학년" in selected_grade: current_sys_prompt = PROMPT_2
             else: current_sys_prompt = PROMPT_3
@@ -380,7 +417,6 @@ if st.button("🚀 선택 학년 AI 생기부 분석 실행", type="primary", us
                     
                     st.success(f"✅ {idx+1}번 엔진으로 {selected_grade} 분석 리포트 완성!")
                     
-                    # 리포트 출력
                     st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                     st.markdown(response.text, unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
