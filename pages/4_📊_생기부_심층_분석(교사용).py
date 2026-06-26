@@ -126,7 +126,7 @@ if not st.session_state.teacher_authenticated:
         st.info("💡 학생들의 민감한 성적 및 생기부 데이터를 다루는 교사 전용 메뉴입니다. 진로진학부 전용 비밀번호를 입력해 주세요.")
         pwd = st.text_input("🔑 비밀번호", type="password", placeholder="비밀번호를 입력하세요")
         
-        if st.button("입장하기", type="primary"):
+        if st.button("입장하기", type="primary", use_container_width=True):
             
             if pwd == "ymgh17147":  
                 st.session_state.teacher_authenticated = True
