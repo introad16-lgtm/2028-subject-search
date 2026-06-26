@@ -127,8 +127,8 @@ if not st.session_state.teacher_authenticated:
         pwd = st.text_input("🔑 비밀번호", type="password", placeholder="비밀번호를 입력하세요")
         
         if st.button("입장하기", type="primary"):
-            # 🔥 아래 "양명진학" 부분을 선생님이 원하시는 비밀번호로 자유롭게 변경하세요!
-            if pwd == "양명진학":  
+            
+            if pwd == "진학17147":  
                 st.session_state.teacher_authenticated = True
                 st.rerun()  # 비밀번호가 맞으면 화면을 새로고침하여 본 페이지 진입!
             else:
