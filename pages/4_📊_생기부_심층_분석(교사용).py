@@ -18,7 +18,7 @@ def get_best_model(api_key):
     except:
         return "gemini-1.5-flash"
 
-# --- 🛡️ 개인정보 자동 블라인드(마스킹) ---
+# --- 🛡️ 2차 정규식 개인정보 자동 블라인드 함수 ---
 def anonymize_text(text):
     text = re.sub(r'\d{6}\s*-\s*\d{7}', '******-*******', text) 
     text = re.sub(r'(성명\s*:\s*)[가-힣]{2,5}', r'\1OOO', text) 
@@ -84,7 +84,7 @@ def get_local_admission_stats(file_path, target_univ, target_major):
         return stats_str
     except Exception as e: return f"데이터 분석 오류: {e}"
 
-# --- 1. 페이지 설정 ---
+# --- 1. 페이지 설정 및 디자인 ---
 st.set_page_config(page_title="양명여고 생기부 분석기", page_icon="📊", layout="wide")
 
 st.markdown("""
@@ -105,7 +105,7 @@ st.markdown("""
     td { padding: 12px; border: 1px solid #CBD5E1; vertical-align: top; }
     @media print {
         [data-testid="stSidebar"], [data-testid="stHeader"], div[data-testid="stToolbar"] { display: none !important; }
-        .stButton, .stDownloadButton, .status-box, iframe { display: none !important; }
+        .stButton, .stDownloadButton, .status-box, iframe, .element-container:has(input) { display: none !important; }
         .stApp { background-color: white !important; }
         .report-box { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
     }
@@ -113,7 +113,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ========= 🔒 [신규] 교사 전용 보안 (비밀번호) 시스템 =========
+# ========= 🔒 교사 전용 보안 (비밀번호) 시스템 =========
 if "teacher_authenticated" not in st.session_state:
     st.session_state.teacher_authenticated = False
 
@@ -126,19 +126,19 @@ if not st.session_state.teacher_authenticated:
         st.info("💡 학생들의 민감한 성적 및 생기부 데이터를 다루는 교사 전용 메뉴입니다. 진로진학부 전용 비밀번호를 입력해 주세요.")
         pwd = st.text_input("🔑 비밀번호", type="password", placeholder="비밀번호를 입력하세요")
         
+        # 버튼을 가로로 꽉 차게 확장 (use_container_width=True)
         if st.button("입장하기", type="primary", use_container_width=True):
-            
-            if pwd == "ymgh17147":  
+            if pwd == "ymgh17147":  # 🔥 비밀번호 설정
                 st.session_state.teacher_authenticated = True
-                st.rerun()  # 비밀번호가 맞으면 화면을 새로고침하여 본 페이지 진입!
+                st.rerun()  
             else:
                 st.error("❌ 비밀번호가 일치하지 않습니다.")
                 
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🏠 메인 화면으로 돌아가기"):
+        if st.button("🏠 메인 화면으로 돌아가기", use_container_width=True):
             st.switch_page("app.py")
             
-    st.stop()  # 🚨 [중요] 비밀번호를 맞추기 전까지는 아래쪽 코드가 절대 실행되지 않게 막는 철벽 방어!
+    st.stop()  # 인증 전에는 아래 코드를 절대 실행하지 않음
 # ==========================================================
 
 
@@ -159,8 +159,7 @@ with st.sidebar:
     else: target_keys = []
     
     st.markdown("---")
-    # 🔓 보안 모드 해제 (로그아웃) 버튼 추가
-    if st.button("🔓 로그아웃 (비밀번호 잠금)"):
+    if st.button("🔓 로그아웃 (비밀번호 잠금)", use_container_width=True):
         st.session_state.teacher_authenticated = False
         st.rerun()
         
@@ -171,7 +170,7 @@ if st.button("🏠 메인 화면으로 가기"): st.switch_page("app.py")
 
 st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-weight: 900; font-size: 3rem;'>📊 생기부 심층 분석기 (학년 통합)</h1>", unsafe_allow_html=True)
 
-# 📌 [핵심] 학년 선택 라디오 버튼
+# 📌 학년 선택 라디오 버튼
 selected_grade = st.radio("👨‍🏫 분석할 학생의 학년을 선택하세요", ["1학년 (진로 탐색 및 기초 설계)", "2학년 (전공 심화 및 빌드업)", "3학년 (수시 실전 포트폴리오)"], horizontal=True)
 
 REF_PDF_PATH = "우수생기부통합.pdf"
@@ -180,7 +179,10 @@ reference_record = load_local_pdf(REF_PDF_PATH)
 
 st.markdown("---")
 st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 생기부 업로드 및 사전 진단</h3>", unsafe_allow_html=True)
-student_file = st.file_uploader("나이스 생기부 PDF 업로드 (개인정보 자동 마스킹)", type=["pdf"])
+
+# 🔥 1차 방어막: 학생 실명 원천 차단 입력창
+mask_name = st.text_input("🛡️ 텍스트 원천 차단용 학생 이름 (선택)", placeholder="예: 홍길동 (입력 시 생기부 텍스트에서 이름이 완벽히 삭제된 후 AI로 전송됩니다)")
+student_file = st.file_uploader("나이스 생기부 PDF 업로드", type=["pdf"])
 
 # 🔄 학년별 동적 입력 폼
 target_univ, target_major, admission_stats_text, final_student_record = "", "", "", ""
@@ -190,13 +192,12 @@ if selected_grade == "1학년 (진로 탐색 및 기초 설계)":
     col1, col2 = st.columns(2)
     with col1:
         g1_track = st.text_input("🎯 희망 진로/계열", placeholder="예: 미디어/언론 계열")
-        g1_trend = st.text_input("📉 중학교 대비 성취도 변화 및 멘탈", placeholder="예: 중학교 올A였으나 고1 첫 수학/과학 4등급으로 하락해 불안해함")
+        g1_trend = st.text_input("📉 중학교 대비 성취도 변화 및 멘탈", placeholder="예: 중학교 올A였으나 고1 수학 4등급으로 하락해 불안해함")
     with col2:
-        g1_favorite = st.text_input("✨ 가장 흥미 있어 하는 과목", placeholder="예: 국어, 사회")
+        g1_favorite = st.text_input("✨ 가장 흥미 있어 하는 과목", placeholder="예: 국어, 통합사회")
         g1_choice = st.text_input("📚 2학년 선택 과목 1/2지망", placeholder="예: 윤리와사상, 세계지리 고민 중")
-    
-    user_context = f"- 희망 진로 계열: {g1_track}\n- 중학교 대비 성취도 변화 및 학생 상태: {g1_trend}\n- 가장 흥미 있는 공통 과목: {g1_favorite}\n- 2학년 선택 고민 과목: {g1_choice}"
-    target_major = g1_track # 1학년은 전공대신 계열로 엑셀 검색
+    user_context = f"- 희망 진로 계열: {g1_track}\n- 중학교 대비 성취도 변화: {g1_trend}\n- 가장 흥미 있는 과목: {g1_favorite}\n- 2학년 선택 고민 과목: {g1_choice}"
+    target_major = g1_track
 
 elif selected_grade == "2학년 (전공 심화 및 빌드업)":
     col1, col2 = st.columns(2)
@@ -205,10 +206,9 @@ elif selected_grade == "2학년 (전공 심화 및 빌드업)":
         target_major = st.text_input("🎓 희망 학과 (통계용)", placeholder="예: 미디어학과")
         g2_grade = st.text_input("📊 5등급제 내신 평균", placeholder="예: 2.1")
     with col2:
-        g2_trend = st.text_input("📉 1학년 대비 성적 추이", placeholder="예: 1학년 대비 전체적으로 상승세, 국어 특히 우수")
-        g2_subject = st.text_input("📚 3학년 선택 과목 고민", placeholder="예: 융합 선택에서 심화수학을 할지 말지 고민 중")
-        
-    user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 현재 5등급제 내신: {g2_grade}\n- 1학년 대비 성적 추이: {g2_trend}\n- 3학년 선택 과목 고민: {g2_subject}"
+        g2_trend = st.text_input("📉 1학년 대비 성적 추이", placeholder="예: 전체적으로 상승세, 국어 특히 우수")
+        g2_subject = st.text_input("📚 3학년 선택 과목 고민", placeholder="예: 심화수학을 할지 말지 고민 중")
+    user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 5등급제 내신: {g2_grade}\n- 1학년 대비 성적 추이: {g2_trend}\n- 3학년 선택 고민 과목: {g2_subject}"
 
 else: # 3학년
     col1, col2, col3 = st.columns(3)
@@ -223,15 +223,29 @@ else: # 3학년
     with col_q2:
         s_minimum = st.text_input("📝 수능 최저 충족 가능성", placeholder="예: 2합 6 안정")
         s_interview = st.text_input("🎤 면접 성향", placeholder="예: 말하기 자신감 높음")
-        
     user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 내신: {student_grade}\n- 전략: {s_strategy} / {s_region}\n- 수능 최저: {s_minimum}\n- 면접: {s_interview}"
 
+
+# 🔥 PDF 텍스트 추출 및 원천 마스킹 로직
 if student_file:
-    if "current_file" not in st.session_state or st.session_state.current_file != student_file.name:
-        with st.spinner("📄 텍스트 추출 및 개인정보 마스킹 중..."):
+    # 파일이나 마스킹 이름이 바뀔 때 재실행
+    if "current_file" not in st.session_state or st.session_state.current_file != student_file.name or st.session_state.get("last_mask_name") != mask_name:
+        with st.spinner("📄 텍스트 추출 및 개인정보 원천 차단 작업 중..."):
             raw_text = extract_text_from_pdf(student_file)
+            
+            # 🛡️ 1차 방어: 선생님이 입력한 이름 강제 치환 (AI 전송 전)
+            if mask_name:
+                mask_name = mask_name.strip()
+                raw_text = raw_text.replace(mask_name, "학생 A")
+                if len(mask_name) >= 3: # 성 뺀 이름 처리
+                    first_name = mask_name[1:]
+                    raw_text = raw_text.replace(first_name, "학생 A")
+            
+            # 🛡️ 2차 방어: 정규식 마스킹 (전화번호, 기타 양식)
             st.session_state.final_text = anonymize_text(raw_text)
             st.session_state.current_file = student_file.name
+            st.session_state.last_mask_name = mask_name
+            
     final_student_record = st.session_state.final_text
 
 if target_major:
@@ -240,9 +254,20 @@ if target_major:
         with st.expander(f"📊 '{target_major}' 양명여고 합불 통계 미리보기"): st.text(admission_stats_text)
 
 
+# 🔥 공통 보안 지침 (프롬프트 킬 스위치)
+COMMON_SECURITY_PROMPT = """
+[Security & Exception Handling (🚨 초강력 개인정보 보호 절대 원칙)]
+1. 데이터 검증: 데이터가 없으면 "⚠️ 생기부 데이터가 입력되지 않았습니다."라고 출력하고 즉시 멈출 것.
+2. 🚨 실명 노출 절대 금지(Kill Switch): 입력된 생기부 본문(세특, 행특 등) 텍스트 안에 실수로 학생의 '실명(이름)'이 남아 있더라도, 분석 리포트 출력 시에는 **절대로, 어떠한 경우에도 학생의 실명을 그대로 출력하지 마십시오.**
+3. 강제 개명: 리포트 내에서 학생을 지칭해야 할 때는 무조건 **'학생 A'** 또는 **'해당 학생'**이라는 단어만 강제로 사용할 것.
+4. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
+"""
+
 # 🔥 학년별 프롬프트 정의
-PROMPT_1 = """
+PROMPT_1 = f"""
 [System Persona] 당신은 '양명여자고등학교 1학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
+
+{COMMON_SECURITY_PROMPT}
 
 [🚨 절대 규칙 - 표 깨짐 및 세특 대필 방지]
 1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
@@ -286,8 +311,10 @@ PROMPT_1 = """
 * (AI가 파악한 진로 기반으로 교사가 학생에게 던질 수 있는 심화 질문 2가지 제시)
 """
 
-PROMPT_2 = """
+PROMPT_2 = f"""
 [System Persona] 당신은 '양명여자고등학교 2학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
+
+{COMMON_SECURITY_PROMPT}
 
 [🚨 절대 규칙 - 표 깨짐 방지]
 1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
@@ -330,8 +357,10 @@ PROMPT_2 = """
 * (학부모 및 학생 상담 시 강조해야 할 2학년 핵심 과제 2~3줄 요약)
 """
 
-PROMPT_3 = """
+PROMPT_3 = f"""
 [System Persona] 당신은 '양명여자고등학교 3학년 전담 대입 컨설팅 전문가'입니다. 수시 원서 접수 실전용입니다.
+
+{COMMON_SECURITY_PROMPT}
 
 [🚨 절대 규칙 - 표 깨짐 방지]
 1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
