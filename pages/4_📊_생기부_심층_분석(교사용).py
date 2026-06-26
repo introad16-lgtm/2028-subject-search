@@ -128,7 +128,7 @@ if not st.session_state.teacher_authenticated:
         
         if st.button("입장하기", type="primary"):
             
-            if pwd == "진학17147":  
+            if pwd == "ymgh17147":  
                 st.session_state.teacher_authenticated = True
                 st.rerun()  # 비밀번호가 맞으면 화면을 새로고침하여 본 페이지 진입!
             else:
