@@ -126,9 +126,8 @@ if not st.session_state.teacher_authenticated:
         st.info("💡 학생들의 민감한 성적 및 생기부 데이터를 다루는 교사 전용 메뉴입니다. 진로진학부 전용 비밀번호를 입력해 주세요.")
         pwd = st.text_input("🔑 비밀번호", type="password", placeholder="비밀번호를 입력하세요")
         
-        # 버튼을 가로로 꽉 차게 확장 (use_container_width=True)
         if st.button("입장하기", type="primary", use_container_width=True):
-            if pwd == "ymgh17147":  # 🔥 비밀번호 설정
+            if pwd == "양명진학":  
                 st.session_state.teacher_authenticated = True
                 st.rerun()  
             else:
@@ -138,7 +137,7 @@ if not st.session_state.teacher_authenticated:
         if st.button("🏠 메인 화면으로 돌아가기", use_container_width=True):
             st.switch_page("app.py")
             
-    st.stop()  # 인증 전에는 아래 코드를 절대 실행하지 않음
+    st.stop()  
 # ==========================================================
 
 
@@ -228,20 +227,17 @@ else: # 3학년
 
 # 🔥 PDF 텍스트 추출 및 원천 마스킹 로직
 if student_file:
-    # 파일이나 마스킹 이름이 바뀔 때 재실행
     if "current_file" not in st.session_state or st.session_state.current_file != student_file.name or st.session_state.get("last_mask_name") != mask_name:
         with st.spinner("📄 텍스트 추출 및 개인정보 원천 차단 작업 중..."):
             raw_text = extract_text_from_pdf(student_file)
             
-            # 🛡️ 1차 방어: 선생님이 입력한 이름 강제 치환 (AI 전송 전)
             if mask_name:
                 mask_name = mask_name.strip()
                 raw_text = raw_text.replace(mask_name, "학생 A")
-                if len(mask_name) >= 3: # 성 뺀 이름 처리
+                if len(mask_name) >= 3: 
                     first_name = mask_name[1:]
                     raw_text = raw_text.replace(first_name, "학생 A")
             
-            # 🛡️ 2차 방어: 정규식 마스킹 (전화번호, 기타 양식)
             st.session_state.final_text = anonymize_text(raw_text)
             st.session_state.current_file = student_file.name
             st.session_state.last_mask_name = mask_name
@@ -357,6 +353,7 @@ PROMPT_2 = f"""
 * (학부모 및 학생 상담 시 강조해야 할 2학년 핵심 과제 2~3줄 요약)
 """
 
+# 🔥 [3학년 프롬프트 신규 업데이트: 비교 우위 추천 및 원포인트 전략 탑재!]
 PROMPT_3 = f"""
 [System Persona] 당신은 '양명여자고등학교 3학년 전담 대입 컨설팅 전문가'입니다. 수시 원서 접수 실전용입니다.
 
@@ -383,7 +380,8 @@ PROMPT_3 = f"""
 | ③ 융합 (미래 유망) | | * 내용 |
 
 3. 수시 6장 지원 대학 포트폴리오
-| 지원 전략 | 추천 대학 | 추천 전형 | 추천 사유 및 합격 가능성 분석 |
+* (주의: '추천 사유 및 합격 가능성 분석' 작성 시, 단순히 추천 이유만 적지 말고 반드시 타 전형(예: 교과전형 등)과 비교하여 "왜 이 학생에게 이 전형(예: 종합전형)으로 지원하는 것이 더 유리한지" 비교 우위 분석을 명시할 것)
+| 지원 전략 | 추천 대학 | 추천 전형 | 추천 사유 및 합격 가능성 분석 (전형 비교 우위 분석 필수) |
 | :--- | :--- | :--- | :--- |
 | 상향 1 | | | * 내용<br>* 내용 |
 | 상향 2 | | | * 내용<br>* 내용 |
@@ -403,7 +401,8 @@ PROMPT_3 = f"""
 | 주제 1 | | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 |
 
 6. 핵심 상담 포인트
-* (교사용 최종 조언 2줄 요약)
+* 🎯 **[원포인트 지원 전략]**: (예시: 성신여대 지원 시, 내신 컷이 높은 교과 전형보다는 전공 적합성을 높게 평가하는 학종(자기주도인재 등) 전형으로 우회하는 것이 합격 확률을 40% 이상 높일 수 있음. 이처럼 해당 학생의 기록을 바탕으로 구체적인 전형 간 비교 우위 전략을 1문장으로 반드시 출력할 것)
+* (교사용 종합 최종 조언 1~2줄 요약)
 """
 
 if st.button("🚀 선택 학년 AI 생기부 분석 실행", type="primary", use_container_width=True):
