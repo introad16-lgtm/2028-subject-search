@@ -13,13 +13,12 @@ def get_best_model(api_key):
         genai.configure(api_key=api_key)
         models = [m.name.replace("models/", "") for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         for t in ["gemini-1.5-pro", "gemini-1.5-flash"]: 
-            if t in models: 
-                return t
+            if t in models: return t
         return models[0] if models else "gemini-1.5-flash"
     except:
         return "gemini-1.5-flash"
 
-# --- 🛡️ 강력한 개인정보 자동 블라인드(마스킹) 함수 ---
+# --- 🛡️ 개인정보 자동 블라인드(마스킹) ---
 def anonymize_text(text):
     text = re.sub(r'\d{6}\s*-\s*\d{7}', '******-*******', text) 
     text = re.sub(r'(성명\s*:\s*)[가-힣]{2,5}', r'\1OOO', text) 
@@ -35,8 +34,7 @@ def extract_text_from_pdf(uploaded_file):
         pdf_reader = PyPDF2.PdfReader(uploaded_file)
         for page in pdf_reader.pages:
             extracted = page.extract_text()
-            if extracted:
-                text += extracted + "\n"
+            if extracted: text += extracted + "\n"
     except Exception as e:
         st.error(f"학생 PDF 파일 읽기 오류: {e}")
     return text
@@ -50,25 +48,20 @@ def load_local_pdf(file_path):
                 pdf_reader = PyPDF2.PdfReader(f)
                 for page in pdf_reader.pages:
                     extracted = page.extract_text()
-                    if extracted:
-                        text += extracted + "\n"
-        except Exception as e:
-            pass 
+                    if extracted: text += extracted + "\n"
+        except Exception: pass 
     return text
 
-# --- 📊 양명여고 합불 통계 검색 함수 ---
+# --- 📊 양명여고 합불 통계 검색 ---
 @st.cache_data
 def get_local_admission_stats(file_path, target_univ, target_major):
-    if not os.path.exists(file_path):
-        return ""
+    if not os.path.exists(file_path): return ""
     try:
         df = pd.read_excel(file_path, sheet_name=0)
         filtered_df = df.copy()
         
-        if target_univ:
-            filtered_df = filtered_df[filtered_df['대학명'].str.contains(target_univ, na=False)]
-        if target_major:
-            filtered_df = filtered_df[filtered_df['지원학과(모집단위)'].str.contains(target_major, na=False)]
+        if target_univ: filtered_df = filtered_df[filtered_df['대학명'].str.contains(target_univ, na=False)]
+        if target_major: filtered_df = filtered_df[filtered_df['지원학과(모집단위)'].str.contains(target_major, na=False)]
         
         is_fallback = False
         if filtered_df.empty and target_major:
@@ -76,27 +69,22 @@ def get_local_admission_stats(file_path, target_univ, target_major):
              is_fallback = True
 
         if filtered_df.empty:
-            return f"❌ 최근 3개년(2022~2025) 양명여고 데이터에 '{target_major}' 관련 지원 기록이 아예 존재하지 않습니다."
+            return f"❌ 최근 3개년(2022~2025) 양명여고 데이터에 '{target_major}' 관련 기록이 존재하지 않습니다."
         
         stats = filtered_df.groupby(['대학명', '전형명', '최종합불결과'])['전교과_내신평균'].agg(['count', 'mean', 'min', 'max']).reset_index()
         stats.columns = ['대학명', '전형명', '결과', '지원건수', '평균내신', '최고내신(min)', '최저내신(max)']
         
         if is_fallback and target_univ:
-            stats_str = f"💡 [참고 데이터] 최근 3년간 양명여고 선배들의 '{target_univ} {target_major}' 지원 기록이 없습니다.\n"
-            stats_str += f"👉 대신 엑셀 DB에 등록된 **'다른 대학교의 {target_major}'** 관련 지원 통계를 출력합니다.\n\n"
+            stats_str = f"💡 [참고] '{target_univ} {target_major}' 데이터가 없어 타 대학교의 '{target_major}' 통계를 출력합니다.\n\n"
         else:
-            stats_str = f"📈 [양명여고 최근 3년 '{target_univ} {target_major}' 관련 지원 통계]\n\n"
+            stats_str = f"📈 [양명여고 최근 3년 '{target_univ} {target_major}' 지원 통계]\n\n"
             
         for index, row in stats.iterrows():
-            stats_str += f"- 대학/전형: {row['대학명']} ({row['전형명']})\n"
-            stats_str += f"  결과: {row['결과']} ({row['지원건수']}건)\n"
-            stats_str += f"  내신: 평균 {row['평균내신']:.2f} (최고 {row['최고내신(min)']:.2f} ~ 최저 {row['최저내신(max)']:.2f})\n\n"
-            
+            stats_str += f"- {row['대학명']}({row['전형명']}): {row['결과']}({row['지원건수']}건) / 내신평균 {row['평균내신']:.2f}\n"
         return stats_str
-    except Exception as e:
-        return f"엑셀 데이터 분석 중 오류 발생: {e}"
+    except Exception as e: return f"데이터 분석 오류: {e}"
 
-# --- 1. 페이지 설정 및 디자인 ---
+# --- 1. 페이지 설정 ---
 st.set_page_config(page_title="양명여고 생기부 분석기", page_icon="📊", layout="wide")
 
 st.markdown("""
@@ -110,278 +98,310 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important; width: 100%; margin-top: 15px !important;
     }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(29, 78, 216, 0.4) !important; }
-    div.stDownloadButton > button { width: 100%; font-weight: bold; border-radius: 10px; margin-top: 10px; }
     .report-box { background-color: white; border-top: 5px solid #2563EB; border-radius: 10px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px; font-size: 1.05rem; line-height: 1.7; }
-    .upload-box { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #2563EB; }
     .status-box { background-color: #EFF6FF; padding: 20px; border-radius: 10px; border: 1px solid #BFDBFE; margin-bottom: 20px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th { background-color: #F1F5F9; text-align: left; padding: 12px; border: 1px solid #CBD5E1; }
     td { padding: 12px; border: 1px solid #CBD5E1; vertical-align: top; }
-    
-    /* 🔥 [핵심] 인쇄(PDF 저장) 시 리포트 외의 모든 지저분한 메뉴 숨기기 */
     @media print {
         [data-testid="stSidebar"], [data-testid="stHeader"], div[data-testid="stToolbar"] { display: none !important; }
-        .stButton, .stDownloadButton, .upload-box, .status-box, iframe { display: none !important; }
+        .stButton, .stDownloadButton, .status-box, iframe { display: none !important; }
         .stApp { background-color: white !important; }
         .report-box { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 🔑 트리플 API 키 가져오기
+# API 키 세팅
 keys_list = []
-try: 
-    if st.secrets["GEMINI_API_KEY_1"]: keys_list.append(st.secrets["GEMINI_API_KEY_1"])
-except: pass
-try: 
-    if st.secrets["GEMINI_API_KEY_2"]: keys_list.append(st.secrets["GEMINI_API_KEY_2"])
-except: pass
-try: 
-    if st.secrets["GEMINI_API_KEY_3"]: keys_list.append(st.secrets["GEMINI_API_KEY_3"])
-except: pass
+for i in range(1, 4):
+    try: 
+        if st.secrets[f"GEMINI_API_KEY_{i}"]: keys_list.append(st.secrets[f"GEMINI_API_KEY_{i}"])
+    except: pass
 
 with st.sidebar:
     st.markdown("### 🔐 교사 전용 모드 (트리플 엔진)")
     key_choice = st.radio("사용할 AI 계정 선택:", ["🤖 자동 모드 (권장)", "계정 1 (메인)", "계정 2 (예비 1)", "계정 3 (예비 2)"])
-    
-    if key_choice == "🤖 자동 모드 (권장)": target_keys = keys_list; st.success(f"✅ 자동 모드 가동 중! (가용 엔진: {len(keys_list)}개)")
-    elif key_choice == "계정 1 (메인)" and len(keys_list) >= 1: target_keys = [keys_list[0]]; st.success("✅ 계정 1 수동 연결!")
-    elif key_choice == "계정 2 (예비 1)" and len(keys_list) >= 2: target_keys = [keys_list[1]]; st.success("✅ 계정 2 수동 연결!")
-    elif key_choice == "계정 3 (예비 2)" and len(keys_list) >= 3: target_keys = [keys_list[2]]; st.success("✅ 계정 3 수동 연결!")
-    else: target_keys = []; st.error("🚨 선택한 계정의 API 키가 없습니다.")
-        
+    if key_choice == "🤖 자동 모드 (권장)": target_keys = keys_list
+    elif key_choice == "계정 1 (메인)" and len(keys_list) >= 1: target_keys = [keys_list[0]]
+    elif key_choice == "계정 2 (예비 1)" and len(keys_list) >= 2: target_keys = [keys_list[1]]
+    elif key_choice == "계정 3 (예비 2)" and len(keys_list) >= 3: target_keys = [keys_list[2]]
+    else: target_keys = []
     st.markdown("---")
     st.markdown("**양명여자고등학교 진로진학부**")
-
 if st.button("🏠 메인 화면으로 가기"): st.switch_page("app.py")
 
-st.markdown("""
-<div style='text-align: center; padding-bottom: 20px;'>
-    <h1 style='color: #1E3A8A; font-weight: 900; font-size: 3rem;'>📊 3학년 생기부 심층 분석기</h1>
-    <p style='color: #64748B; font-size: 1.1rem;'>우수 생기부와 <b>합불 엑셀 데이터</b>를 융합하여 완벽한 수시 전략을 설계합니다.</p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-weight: 900; font-size: 3rem;'>📊 생기부 심층 분석기 (학년 통합)</h1>", unsafe_allow_html=True)
 
-st.markdown("""
-<div class='status-box'>
-    <h4 style='color: #1D4ED8; margin-top: 0; margin-bottom: 15px;'>⚙️ 학교 DB 자동 연동 상태</h4>
-    ✅ <b>우수 생기부 평가 기준</b> (우수생기부통합.pdf) : 백그라운드 로드 완료<br>
-    ✅ <b>양명여고 합불 통계</b> (양명여고_합불데이터(2022_2025).xlsx) : 분석 엔진 대기 중
-</div>
-""", unsafe_allow_html=True)
+# 📌 [핵심] 학년 선택 라디오 버튼
+selected_grade = st.radio("👨‍🏫 분석할 학생의 학년을 선택하세요", ["1학년 (진로 탐색 및 기초 설계)", "2학년 (전공 심화 및 빌드업)", "3학년 (수시 실전 포트폴리오)"], horizontal=True)
 
 REF_PDF_PATH = "우수생기부통합.pdf"
 EXCEL_FILE_PATH = "양명여고_합불데이터(2022_2025).xlsx"
 reference_record = load_local_pdf(REF_PDF_PATH)
 
-st.markdown("<div class='upload-box'>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 [분석 대상] 학생 생기부 (PDF)</h3>", unsafe_allow_html=True)
-st.info("💡 분석할 학생의 나이스 생기부 PDF 파일을 올려주세요. 개인정보는 100% 자동 삭제됩니다.")
-student_file = st.file_uploader("학생 생기부 파일 업로드", type=["pdf"], key="stu_upload", label_visibility="collapsed")
+st.markdown("---")
+st.markdown("<h3 style='color: #2563EB; margin-top: 0;'>👤 생기부 업로드 및 사전 진단</h3>", unsafe_allow_html=True)
+student_file = st.file_uploader("나이스 생기부 PDF 업로드 (개인정보 자동 마스킹)", type=["pdf"])
 
-# 📋 기본 인적 정보 입력란
-col1, col2, col3 = st.columns(3)
-with col1: target_univ = st.text_input("🎯 1지망 대학", placeholder="예: 서울대")
-with col2: target_major = st.text_input("🎓 1지망 학과", placeholder="예: 교육학과")
-with col3: student_grade = st.text_input("📊 학생 전교과 내신", placeholder="예: 1.5")
+# 🔄 학년별 동적 입력 폼
+target_univ, target_major, admission_stats_text, final_student_record = "", "", "", ""
+user_context = ""
 
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("<h4 style='color: #1E3A8A; margin-bottom: 10px;'>📋 정밀 분석을 위한 사전 진단 입력란 (AI 포트폴리오에 즉시 반영)</h4>", unsafe_allow_html=True)
+if selected_grade == "1학년 (진로 탐색 및 기초 설계)":
+    col1, col2 = st.columns(2)
+    with col1:
+        g1_track = st.text_input("🎯 희망 진로/계열", placeholder="예: 미디어/언론 계열")
+        g1_trend = st.text_input("📉 중학교 대비 성취도 변화 및 멘탈", placeholder="예: 중학교 올A였으나 고1 첫 수학/과학 4등급으로 하락해 불안해함")
+    with col2:
+        g1_favorite = st.text_input("✨ 가장 흥미 있어 하는 과목", placeholder="예: 국어, 사회")
+        g1_choice = st.text_input("📚 2학년 선택 과목 1/2지망", placeholder="예: 윤리와사상, 세계지리 고민 중")
+    
+    user_context = f"- 희망 진로 계열: {g1_track}\n- 중학교 대비 성취도 변화 및 학생 상태: {g1_trend}\n- 가장 흥미 있는 공통 과목: {g1_favorite}\n- 2학년 선택 고민 과목: {g1_choice}"
+    target_major = g1_track # 1학년은 전공대신 계열로 엑셀 검색
 
-col_q1, col_q2 = st.columns(2)
-with col_q1:
-    s_strategy = st.selectbox("⚖️ 수시 전략 방향성", ["선택 안함", "학생부종합전형(학종) 중심", "교과전형 중심", "학종/교과 균형 병행", "실기 및 특기자 전형 위주"])
-    s_region = st.text_input("🗺️ 선호 대학 권역", value="인서울 최우선 및 수도권 주요 대학 선호")
-with col_q2:
-    s_minimum = st.text_input("📝 수능 최저 학력 기준 충족 가능성", placeholder="예: 모의고사 2합 6 안정적 가능 / 최저 없는 전형 희망")
-    s_interview = st.text_input("🎤 학생의 면접 대비 상태 및 성향", placeholder="예: 말하기 자신감 높음 / 모의면접 경험 없음 등")
+elif selected_grade == "2학년 (전공 심화 및 빌드업)":
+    col1, col2 = st.columns(2)
+    with col1:
+        target_univ = st.text_input("🎯 1지망 희망 대학 (통계용)", placeholder="예: 건국대")
+        target_major = st.text_input("🎓 희망 학과 (통계용)", placeholder="예: 미디어학과")
+        g2_grade = st.text_input("📊 5등급제 내신 평균", placeholder="예: 2.1")
+    with col2:
+        g2_trend = st.text_input("📉 1학년 대비 성적 추이", placeholder="예: 1학년 대비 전체적으로 상승세, 국어 특히 우수")
+        g2_subject = st.text_input("📚 3학년 선택 과목 고민", placeholder="예: 융합 선택에서 심화수학을 할지 말지 고민 중")
+        
+    user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 현재 5등급제 내신: {g2_grade}\n- 1학년 대비 성적 추이: {g2_trend}\n- 3학년 선택 과목 고민: {g2_subject}"
 
-final_student_record = ""
-admission_stats_text = ""
+else: # 3학년
+    col1, col2, col3 = st.columns(3)
+    with col1: target_univ = st.text_input("🎯 1지망 대학", placeholder="예: 서울대")
+    with col2: target_major = st.text_input("🎓 1지망 학과", placeholder="예: 교육학과")
+    with col3: student_grade = st.text_input("📊 전교과 내신", placeholder="예: 1.5")
+    
+    col_q1, col_q2 = st.columns(2)
+    with col_q1:
+        s_strategy = st.selectbox("⚖️ 수시 전략", ["학생부종합(학종) 중심", "교과전형 중심", "학종/교과 병행", "실기/특기자 위주"])
+        s_region = st.text_input("🗺️ 선호 권역", value="인서울 및 수도권")
+    with col_q2:
+        s_minimum = st.text_input("📝 수능 최저 충족 가능성", placeholder="예: 2합 6 안정")
+        s_interview = st.text_input("🎤 면접 성향", placeholder="예: 말하기 자신감 높음")
+        
+    user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 내신: {student_grade}\n- 전략: {s_strategy} / {s_region}\n- 수능 최저: {s_minimum}\n- 면접: {s_interview}"
 
 if student_file:
-    if "current_file_name" not in st.session_state or st.session_state.current_file_name != student_file.name:
-        with st.spinner("📄 생기부 텍스트 추출 및 마스킹 작업 중..."):
-            raw_student_text = extract_text_from_pdf(student_file)
-            st.session_state.final_student_record = anonymize_text(raw_student_text)
-            st.session_state.current_file_name = student_file.name
-            st.success("✅ 학생 생기부 로드 및 개인정보 블라인드 처리 완료!")
-    else:
-        st.success("⚡ 메모리에서 학생 생기부를 즉시 불러왔습니다!")
-    final_student_record = st.session_state.final_student_record
+    if "current_file" not in st.session_state or st.session_state.current_file != student_file.name:
+        with st.spinner("📄 텍스트 추출 및 개인정보 마스킹 중..."):
+            raw_text = extract_text_from_pdf(student_file)
+            st.session_state.final_text = anonymize_text(raw_text)
+            st.session_state.current_file = student_file.name
+    final_student_record = st.session_state.final_text
 
 if target_major:
     admission_stats_text = get_local_admission_stats(EXCEL_FILE_PATH, target_univ, target_major)
     if admission_stats_text and "오류" not in admission_stats_text:
-        with st.expander(f"📊 '{target_major}' 관련 합불 통계 미리보기"): st.text(admission_stats_text)
+        with st.expander(f"📊 '{target_major}' 양명여고 합불 통계 미리보기"): st.text(admission_stats_text)
 
-st.markdown("</div>", unsafe_allow_html=True)
 
-# 🔥 완벽하게 수정된 프롬프트: S/A/B/C 강제 기입 및 표 형태 완전 보존
-TEACHER_SYSTEM_PROMPT = """
-[System Role & Persona]
-당신은 '양명여자고등학교 선생님을 위한 전담 대입 컨설팅 전문가'입니다. 
+# 🔥 학년별 프롬프트 정의
+PROMPT_1 = """
+[System Persona] 당신은 '양명여자고등학교 1학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
 
-[🚨 마크다운 표(Table) 작성 절대 규칙 - 표 깨짐 방지]
-1. 표를 그리기 전과 후에는 반드시 빈 줄(엔터 2번)을 넣어주세요.
-2. 행(Row)과 행 사이는 정상적으로 엔터를 쳐서 다음 줄로 넘어가세요.
-3. 단, 하나의 셀(Cell) 내부에서 여러 줄의 글을 쓸 때는 절대 엔터를 치지 말고, 반드시 `<br>` 태그를 사용하여 줄바꿈하세요. (셀 안에서 엔터를 치면 표가 완전히 깨집니다.)
-4. 1번 문항의 '평가 등급' 칸에는 학생의 수준을 냉정하게 판단하여 반드시 'S', 'A', 'B', 'C' 중 하나의 알파벳을 기입하세요. (절대 누락 금지)
+[🚨 절대 규칙 - 표 깨짐 및 세특 대필 방지]
+1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
+2. 1번 문항 등급 판정 시 S/A/B/C 중 하나를 반드시 입력하세요.
+3. [경고] Step 3 작성 시 '완성형 세특 문장(생기부 기재용)'을 절대 쓰지 마십시오. 교사의 평가권을 침해합니다. 반드시 '탐구 주제명'과 학생이 해볼 수 있는 '행동/수행 방안(액션 플랜)'만 제시하십시오.
 
-[Core Evaluation Principles (5대 절대 준수 원칙)]
-1. 기록의 패러다임: '참여 사실' 나열은 최하점, '학생의 주도적 확장 + 교사의 전문적 평가' 결합을 최우수로 평가.
-2. 탐구 알고리즘 (4단계): [①교과 개념 발제 → ②독서/논문 심화 → ③전공 현상 적용 → ④한계 인식 및 환류] 구조 점검.
-3. 철학적 사유와 초융합: 인문/철학적 질문을 자연과학/공학의 원리로 증명(또는 그 반대)하는 창의적 융합 확인.
-4. 도구 교과의 무기화: 수학, 정보(AI/코딩)를 활용한 정량적 산출물 유무 점검.
-5. 표현의 구체성: '분석하다, 증명하다, 모델링하다' 등 학술적인 행동동사 중심 분석.
-
-[Security & Exception Handling]
-1. 데이터 검증: 데이터가 없으면 "⚠️ 생기부 데이터가 입력되지 않았습니다. 데이터를 입력해 주세요."라고만 출력.
-2. 완전한 익명화: 식별 불가능한 가명(예: 학생 A)만 사용할 것. 
-3. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
-
-[Execution Tasks & Strict Output Templates]
-선생님이 사전에 입력한 [사전 진단 맥락 정보]를 반영하여, 아래 지정된 1~6번 목차 양식 및 표 구조를 100% 동일하게 복사하여 출력하세요.
-
-1. 총평 및 대입 3대 핵심 역량 평가
-* 총평: (사정관 시각에서 초안의 핵심 경쟁력과 보완점을 2~3줄로 요약)
-
-| 평가 영역 | 평가 등급 | 생기부 기반 구체적 성취 수준 및 정성 평가 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
-| :--- | :---: | :--- | :--- |
-| 학업 역량 | [S, A, B, C 중 택1] | * 내용1<br>* 내용2 | * 강점: 내용<br>* 약점: 내용 |
-| 진로 역량 | [S, A, B, C 중 택1] | * 내용1<br>* 내용2 | * 강점: 내용<br>* 약점: 내용 |
-| 공동체 역량 | [S, A, B, C 중 택1] | * 내용1<br>* 내용2 | * 강점: 내용<br>* 약점: 내용 |
-
-2. 전략적 지원 학과 추천
-
-| 추천 방향성 | 추천 학과(전공) | 생기부 기반 추천 사유 및 타당성 (개조식) |
+[출력 양식 - 이대로만 출력할 것]
+1. 진로 및 계열 심층 분석
+* (선생님이 입력한 학생의 멘탈/성적 변화를 바탕으로 1학년 시점의 학습 및 심리적 조언 3줄 요약)
+| 핵심 추천 학과 | 연계 직업군 | 관련 학과 탐구 가능한 대학 홈페이지 링크 |
 | :--- | :--- | :--- |
-| ① 메인 전공 (정면 돌파) | | * 내용 |
-| ② 틈새 전공 (전략적 우회) | | * 내용 |
-| ③ 융합 전공 (미래 유망) | | * 내용 |
+| 학과명 | 내용<br>내용 | 링크 예시 |
 
-3. 수시 6장 지원 대학 포트폴리오
-(제공된 선생님의 수시 전략, 권역 선호도, 수능 최저 충족 상황을 반영하여 현실적으로 설계)
-
-| 지원 전략 | 추천 대학 | 추천 전형 | 추천 사유 및 합격 가능성 분석 (개조식) |
-| :--- | :--- | :--- | :--- |
-| 상향 (도전) 1 | | | * 내용1<br>* 내용2 |
-| 상향 (도전) 2 | | | * 내용1<br>* 내용2 |
-| 적정 1 | | | * 내용1<br>* 내용2 |
-| 적정 2 | | | * 내용1<br>* 내용2 |
-| 안정 1 | | | * 내용1<br>* 내용2 |
-| 안정 2 | | | * 내용1<br>* 내용2 |
-
-4. 남은 학기 맞춤형 후속 탐구(Follow-up Project) 기획
-
-| 영역 | 제안 탐구 주제명 | 제안 배경 및 근거 | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) | 기대 효과 및 어필 역량 |
-| :--- | :--- | :--- | :--- | :--- |
-| 창체 자율 | | * 내용 | * 1단계(발제): 내용<br>* 2단계(심화): 내용<br>* 3단계(적용): 내용<br>* 4단계(환류): 내용 | * 내용1<br>* 내용2 |
-| 창체 진로 | | * 내용 | * 1단계(발제): 내용<br>* 2단계(심화): 내용<br>* 3단계(적용): 내용<br>* 4단계(환류): 내용 | * 내용1<br>* 내용2 |
-| 교과 세특 | | * 내용 | * 1단계(발제): 내용<br>* 2단계(심화): 내용<br>* 3단계(적용): 내용<br>* 4단계(환류): 내용 | * 내용1<br>* 내용2 |
-
-5. [양명여고 특화] 심화 융합 탐구 마스터 플랜
-
-| 융합 프로젝트 주제명 | 연계 대상 (교과 및 창체) | 4단계 수행 과정 (발제 → 심화 → 적용 → 환류) |
+2. 데이터 기반 입결 및 목표 설정
+| 5등급제 내신 구간 | 예상 9등급제 환산치 | 양명여고/일반적 지원 전략 및 목표 설정 가이드 |
 | :--- | :--- | :--- |
-| 주제 1 | | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 |
-| 주제 2 | | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 |
+| (학생 현재 구간) | X.X~X.X 추정 | 내용<br>내용 |
 
-6. 핵심 상담 포인트
-* (교사가 학생 및 학부모 상담 시 수능최저, 면접 강약점을 연계하여 바로 활용할 수 있는 전체 전략의 핵심을 2~3줄로 요약)
+3. 1학년 공통 과목 맞춤형 '탐구 주제' 추천 (완성 문장 절대 금지)
+| 공통 과목 | 목표 역량 | 추천 탐구 주제명 및 구체적 수행 방안 (액션 플랜) |
+| :--- | :---: | :--- |
+| 국어/수학/영어 등 | [S/A/B/C] | * 주제: 내용<br>* 액션플랜: 내용 |
+
+4. 창의적 체험활동 로드맵 (자율/동아리/진로)
+| 영역 | 서류 평가 핵심 역량 | 구체적 액션 플랜 (행동 지표 중심) |
+| :--- | :--- | :--- |
+| 자율/진로 | 역량명 | 내용<br>내용 |
+
+5. 익명화된 우수 생기부 사례 분석
+| 양명여고 선배 우수 사례 핵심 키워드 | 1학년이 벤치마킹 해야 할 '역량의 시작점' |
+| :--- | :--- |
+| 내용 | 내용<br>내용 |
+
+6. 2022 개정 맞춤형 2학년 과목 선택 팁
+| 추천 과목 (일반/진로/융합) | 선택 사유 및 희망 진로 연계 포인트 |
+| :--- | :--- |
+| 과목명 | 내용<br>내용 |
+
+7. 종합 리포트 및 핵심 후속 질문
+* (종합 상담 가이드 2줄 요약)
+* (AI가 파악한 진로 기반으로 교사가 학생에게 던질 수 있는 심화 질문 2가지 제시)
 """
 
-if st.button("🚀 AI 생기부 분석", type="primary", use_container_width=True):
-    if not student_file: st.warning("⚠️ 분석할 학생의 생기부 PDF 파일을 업로드해 주세요.")
-    elif not target_keys: st.error("🚨 사용 가능한 API 키가 없습니다. 좌측 사이드바 설정을 확인해 주세요.")
+PROMPT_2 = """
+[System Persona] 당신은 '양명여자고등학교 2학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
+
+[🚨 절대 규칙 - 표 깨짐 방지]
+1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
+2. 1번 문항 등급 판정 시 S/A/B/C 중 하나를 반드시 입력하세요.
+
+[출력 양식 - 이대로만 출력할 것]
+1. 2학년 중간 점검 및 역량 평가
+* 총평: (전공 적합성 깊이 2~3줄 요약)
+| 평가 영역 | 평가 등급 | 2학년 수준 구체적 성취 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
+| :--- | :---: | :--- | :--- |
+| 학업 역량 | [S/A/B/C] | * 5등급제: [ ] (9등급제 추정: [ ])<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+| 진로 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+| 공동체 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+
+2. 목표 전공 및 전략 대학 가이드 (수시 빌드업 방향)
+| 추천 방향성 | 추천 학과(전공) | 2학년 기록 기반 추천 사유 (개조식) |
+| :--- | :--- | :--- |
+| ① 메인 (전공 심화) | | * 내용 |
+| ② 우회 (계열 적합) | | * 내용 |
+| ③ 융합 (학교 특화) | | * 내용 |
+
+3. 3학년 과목 선택 및 학업 설계 제안
+| 구분 | 추천 과목명 (일반/진로/융합) | 선택 사유 및 생기부 연계 포인트 |
+| :--- | :--- | :--- |
+| 핵심 권장 | | * 내용<br>* 내용 |
+| 전략 선택 | | * 내용<br>* 내용 |
+
+4. 2학년 하반기~3학년 '빌드업' 탐구 설계 (발제→심화→적용→환류)
+| 영역 | 제안 탐구 주제명 | 제안 배경 | 4단계 수행 과정 | 기대 효과 |
+| :--- | :--- | :--- | :--- | :--- |
+| 자율/진로 | | * 내용 | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 | * 내용 |
+| 주요 교과 | | * 내용 | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 | * 내용 |
+
+5. [양명여고 특화] 학급특색 프로젝트 마스터 플랜
+| 융합적 주제명 | 연계 교과/활동 | 4단계 수행 과정 |
+| :--- | :--- | :--- |
+| 주제 1 | | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 |
+
+6. 핵심 상담 가이드 (교사용 Summary)
+* (학부모 및 학생 상담 시 강조해야 할 2학년 핵심 과제 2~3줄 요약)
+"""
+
+PROMPT_3 = """
+[System Persona] 당신은 '양명여자고등학교 3학년 전담 대입 컨설팅 전문가'입니다. 수시 원서 접수 실전용입니다.
+
+[🚨 절대 규칙 - 표 깨짐 방지]
+1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
+2. 1번 문항 등급 판정 시 S/A/B/C 중 하나를 반드시 입력하세요.
+
+[출력 양식 - 이대로만 출력할 것]
+1. 총평 및 대입 3대 핵심 역량 평가
+* 총평: (핵심 경쟁력 요약)
+| 평가 영역 | 평가 등급 | 구체적 성취 수준 및 정성 평가 | 돋보이는 강점 및 보완점 |
+| :--- | :---: | :--- | :--- |
+| 학업 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+| 진로 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+| 공동체 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+
+2. 전략적 지원 학과 추천
+| 추천 방향성 | 추천 학과(전공) | 생기부 기반 추천 사유 (개조식) |
+| :--- | :--- | :--- |
+| ① 메인 (정면 돌파) | | * 내용 |
+| ② 틈새 (전략 우회) | | * 내용 |
+| ③ 융합 (미래 유망) | | * 내용 |
+
+3. 수시 6장 지원 대학 포트폴리오
+| 지원 전략 | 추천 대학 | 추천 전형 | 추천 사유 및 합격 가능성 분석 |
+| :--- | :--- | :--- | :--- |
+| 상향 1 | | | * 내용<br>* 내용 |
+| 상향 2 | | | * 내용<br>* 내용 |
+| 적정 1 | | | * 내용<br>* 내용 |
+| 적정 2 | | | * 내용<br>* 내용 |
+| 안정 1 | | | * 내용<br>* 내용 |
+| 안정 2 | | | * 내용<br>* 내용 |
+
+4. 남은 학기 맞춤형 후속 탐구 기획 (발제→심화→적용→환류)
+| 영역 | 탐구 주제명 | 제안 배경 | 4단계 수행 과정 | 기대 효과 |
+| :--- | :--- | :--- | :--- | :--- |
+| 세특 등 | | * 내용 | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 | * 내용 |
+
+5. [양명여고 특화] 심화 융합 마스터 플랜
+| 주제명 | 연계 대상 | 4단계 수행 과정 |
+| :--- | :--- | :--- |
+| 주제 1 | | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 |
+
+6. 핵심 상담 포인트
+* (교사용 최종 조언 2줄 요약)
+"""
+
+if st.button("🚀 선택 학년 AI 생기부 분석 실행", type="primary", use_container_width=True):
+    if not student_file: st.warning("⚠️ 학생의 생기부 PDF 파일을 업로드해 주세요.")
+    elif not target_keys: st.error("🚨 사용 가능한 API 키가 없습니다.")
     else:
-        with st.spinner("🌐 AI 엔진 가동 중... (입력하신 사전 진단 데이터를 기반으로 맞춤형 수시 라인을 설계 중입니다)"):
-            success = False
+        with st.spinner(f"🌐 {selected_grade} 맞춤형 분석 엔진 가동 중..."):
+            
+            # 선택된 학년에 맞는 프롬프트 장전
+            if "1학년" in selected_grade: current_sys_prompt = PROMPT_1
+            elif "2학년" in selected_grade: current_sys_prompt = PROMPT_2
+            else: current_sys_prompt = PROMPT_3
+
             for idx, current_key in enumerate(target_keys):
                 try:
                     genai.configure(api_key=current_key)
                     chosen_model = get_best_model(current_key)
-                    model = genai.GenerativeModel(model_name=chosen_model, system_instruction=TEACHER_SYSTEM_PROMPT)
+                    model = genai.GenerativeModel(model_name=chosen_model, system_instruction=current_sys_prompt)
                     
-                    ref_text_block = f"[우수 생기부 참조 데이터 (평가 기준)]\n{reference_record}\n" if reference_record else ""
-                    stats_text_block = f"[양명여고 최근 3년 합불 통계 (수시 6장 설계 기준)]\n{admission_stats_text}\n" if admission_stats_text else ""
+                    ref_text = f"[우수 생기부 참조 데이터 (평가 기준)]\n{reference_record}\n" if reference_record else ""
+                    stats_text = f"[양명여고 최근 통계]\n{admission_stats_text}\n" if admission_stats_text else ""
                     
                     user_prompt = f"""
-                    구글 제미나이 엔진 지침: 당신은 오직 아래의 [3. 🔥 진짜 분석 대상 학생 정보]만 분석해야 합니다. 다른 참조 데이터에 등장하는 예시 인물들을 별도의 데이터로 추출하거나 리포트를 여러 개로 쪼개지 마십시오.
-
-                    [1. 우수 사례 참조 데이터 (오직 '평가 기준'으로만 참고)]
-                    {ref_text_block}
+                    [1. 우수 사례 (평가 기준)]
+                    {ref_text}
+                    [2. 양명여고 합불 통계]
+                    {stats_text}
                     
-                    [2. 양명여고 합불 통계 데이터]
-                    {stats_text_block}
+                    =======================================
+                    [3. 🔥 분석 대상 학생 사전 진단 맥락]
+                    {user_context}
                     
-                    ======================================================================
-                    [3. 🔥 분석 대상 학생의 기본 정보 및 선생님의 사전 진단 맥락]
-                    - 1지망 대학/학과: {target_univ if target_univ else '미입력'} / {target_major if target_major else '미입력'}
-                    - 전교과 내신 평균 등급: {student_grade if student_grade else '미입력'}
-                    - ⚖️ 선생님이 판단한 수시 전략 방향: {s_strategy}
-                    - 🗺️ 선호 대학 권역 범위: {s_region}
-                    - 📝 모의고사 기준 수능 최저 충족 여부: {s_minimum}
-                    - 🎤 학생의 구체적 면접 역량 및 성향: {s_interview}
-                    
-                    [🚨 진짜 분석 대상 학생의 실제 생기부 텍스트]
+                    [🚨 실제 생기부 텍스트]
                     {final_student_record}
-                    ======================================================================
-                    
-                    최종 지시: 위 [1번 참조 데이터]에 압도되어 다른 인물을 추출하는 실수를 범하지 마십시오. 오직 [3번]의 실제 학생 1명만을 대상으로 분석하세요. 지정된 1~6번 목차와 표 양식을 100% 동일하게 유지하되, 각 평가 영역의 등급(S/A/B/C)을 반드시 판정하여 기입하십시오. 셀 내부 줄바꿈은 <br> 태그만을 사용하십시오.
+                    =======================================
+                    최종 지시: 위 [3번]의 실제 학생 1명만을 대상으로 지정된 학년의 목차와 표 양식을 100% 동일하게 유지하며 출력하세요. (셀 내부 줄바꿈은 <br> 사용)
                     """
                     
                     st.session_state.chat_session = model.start_chat(history=[])
                     response = st.session_state.chat_session.send_message(user_prompt)
                     
-                    engine_name = f"{idx+1}번 엔진" if key_choice == "🤖 자동 모드 (권장)" else "선택된 엔진"
-                    st.success(f"✅ {engine_name}으로 심층 분석 리포트가 완성되었습니다!")
+                    st.success(f"✅ {idx+1}번 엔진으로 {selected_grade} 분석 리포트 완성!")
                     
-                    # 🔥 스트림릿에서 <br> 태그를 실제 화면 상의 줄바꿈으로 완벽히 변환!
+                    # 리포트 출력
                     st.markdown("<div class='report-box'>", unsafe_allow_html=True)
                     st.markdown(response.text, unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
-                    
                     st.markdown("---")
-                    
-                    st.download_button(
-                        label="📄 텍스트(.md) 파일로 백업 다운로드",
-                        data=response.text,
-                        file_name=f"양명여고_생기부분석_{target_major if target_major else '결과'}.md",
-                        mime="text/markdown"
-                    )
-                    
-                    st.info("💡 **가장 완벽한 PDF 저장 방법:** 아래 버튼을 누른 후, 인쇄 창에서 **대상: 'PDF로 저장'**, 옵션에서 **'배경 그래픽'에 체크**를 하시면 디자인이 유지된 채 깔끔하게 저장됩니다!")
                     
                     components.html(
                         """
-                        <script>
-                        function printPage() {
-                            window.parent.print();
-                        }
-                        </script>
-                        <button onclick="printPage()" style="width: 100%; padding: 15px; background-color: #4F46E5; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: sans-serif; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            🖨️ 보고서 화면을 PDF로 인쇄/저장하기 (클릭)
+                        <script>function printPage() { window.parent.print(); }</script>
+                        <button onclick="printPage()" style="width: 100%; padding: 15px; background-color: #4F46E5; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem;">
+                            🖨️ 보고서 PDF로 인쇄/저장하기 (배경 그래픽 체크 필수)
                         </button>
-                        """,
-                        height=60
+                        """, height=60
                     )
-                    
-                    success = True
                     break 
-                    
                 except Exception as e:
-                    if key_choice == "🤖 자동 모드 (권장)" and idx < len(target_keys) - 1:
-                        st.warning(f"⚠️ {idx+1}번 엔진 응답 지연. 즉시 다음 예비 엔진으로 전환합니다...")
-                        continue 
-                    else:
-                        st.error(f"🚨 분석 중 오류가 발생했습니다.\n\n상세 내용: {str(e)}")
-                        break
+                    if idx < len(target_keys) - 1: continue 
+                    else: st.error(f"🚨 오류 발생: {str(e)}")
 
 st.write("---")
 if "chat_session" in st.session_state:
     st.markdown("### 💬 AI 컨설턴트와 정밀 상담 진행")
-    st.info("리포트를 확인하신 후 수시 전략 수정 등을 요구나 추가 질문을 해보세요.")
     user_msg = st.chat_input("질문이나 추가 정보를 입력하세요...")
     if user_msg:
         with st.chat_message("user"): st.markdown(user_msg)
@@ -389,5 +409,4 @@ if "chat_session" in st.session_state:
             try:
                 response = st.session_state.chat_session.send_message(user_msg)
                 with st.chat_message("assistant"): st.markdown(response.text, unsafe_allow_html=True)
-            except Exception as e:
-                st.error("답변 생성 중 오류가 발생했습니다.")
+            except Exception as e: st.error("답변 생성 중 오류가 발생했습니다.")
