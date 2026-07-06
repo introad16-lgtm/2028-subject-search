@@ -6,6 +6,35 @@ import re
 import pandas as pd
 import os
 
+# --- 💡 양명여고 전용 5등급 -> 9등급 자동 환산 엔진 ---
+def calculate_9_grade(g5_raw):
+    try:
+        val = float(g5_raw)
+    except ValueError:
+        return None
+        
+    # 1. 양명여고 특별 보정
+    avg5 = val - 0.050
+    if avg5 < 1.0: avg5 = 1.0
+    if avg5 > 5.0: avg5 = 5.0
+    
+    # 2. 선형 보간법 (구간 매칭)
+    points = [
+        (1.0, 1.0), (1.1, 1.35), (1.2, 1.65), (1.31, 1.99), 
+        (1.478, 2.345), (1.715, 2.753), (2.004, 3.261), 
+        (3.0, 6.0), (5.0, 9.0)
+    ]
+    
+    if avg5 <= 1.0: return 1.0
+    if avg5 >= 5.0: return 9.0
+    
+    for i in range(len(points) - 1):
+        x1, y1 = points[i]
+        x2, y2 = points[i+1]
+        if x1 <= avg5 <= x2:
+            return y1 + (avg5 - x1) / (x2 - x1) * (y2 - y1)
+    return 9.0
+
 # --- 💡 스마트 캐시 함수 ---
 @st.cache_data(ttl=3600)
 def get_best_model(api_key):
@@ -112,7 +141,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 # ========= 🔒 교사 전용 보안 (비밀번호) 시스템 =========
 if "teacher_authenticated" not in st.session_state:
     st.session_state.teacher_authenticated = False
@@ -127,7 +155,7 @@ if not st.session_state.teacher_authenticated:
         pwd = st.text_input("🔑 비밀번호", type="password", placeholder="비밀번호를 입력하세요")
         
         if st.button("입장하기", type="primary", use_container_width=True):
-            if pwd == "ymgh17147":  
+            if pwd == "ymgh17147":  # 🔒 요청하신 새 비밀번호 설정 완료!
                 st.session_state.teacher_authenticated = True
                 st.rerun()  
             else:
@@ -139,7 +167,6 @@ if not st.session_state.teacher_authenticated:
             
     st.stop()  
 # ==========================================================
-
 
 # API 키 세팅
 keys_list = []
@@ -188,14 +215,21 @@ target_univ, target_major, admission_stats_text, final_student_record = "", "", 
 user_context = ""
 
 if selected_grade == "1학년 (진로 탐색 및 기초 설계)":
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         g1_track = st.text_input("🎯 희망 진로/계열", placeholder="예: 미디어/언론 계열")
-        g1_trend = st.text_input("📉 중학교 대비 성취도 변화 및 멘탈", placeholder="예: 중학교 올A였으나 고1 수학 4등급으로 하락해 불안해함")
+        g1_grade = st.text_input("📊 5등급제 내신 평균", placeholder="예: 1.528")
     with col2:
-        g1_favorite = st.text_input("✨ 가장 흥미 있어 하는 과목", placeholder="예: 국어, 통합사회")
-        g1_choice = st.text_input("📚 2학년 선택 과목 1/2지망", placeholder="예: 윤리와사상, 세계지리 고민 중")
-    user_context = f"- 희망 진로 계열: {g1_track}\n- 중학교 대비 성취도 변화: {g1_trend}\n- 가장 흥미 있는 과목: {g1_favorite}\n- 2학년 선택 고민 과목: {g1_choice}"
+        g1_trend = st.text_input("📉 중학교 대비 성취도 변화 및 멘탈", placeholder="예: 첫 시험 수학 4등급으로 하락해 불안해함")
+    with col3:
+        g1_favorite = st.text_input("✨ 흥미 과목 / 2학년 선택 희망", placeholder="예: 국어 / 윤리와사상 고민 중")
+    
+    calc_msg = ""
+    if g1_grade:
+        g9_val = calculate_9_grade(g1_grade)
+        if g9_val: calc_msg = f" (양명여고 산출기 기준 9등급제 환산: {g9_val:.3f}등급)"
+        
+    user_context = f"- 희망 진로 계열: {g1_track}\n- 5등급 내신: {g1_grade}{calc_msg}\n- 성취도 변화/상태: {g1_trend}\n- 관심 과목: {g1_favorite}"
     target_major = g1_track
 
 elif selected_grade == "2학년 (전공 심화 및 빌드업)":
@@ -203,11 +237,17 @@ elif selected_grade == "2학년 (전공 심화 및 빌드업)":
     with col1:
         target_univ = st.text_input("🎯 1지망 희망 대학 (통계용)", placeholder="예: 건국대")
         target_major = st.text_input("🎓 희망 학과 (통계용)", placeholder="예: 미디어학과")
-        g2_grade = st.text_input("📊 5등급제 내신 평균", placeholder="예: 2.1")
+        g2_grade = st.text_input("📊 5등급제 내신 평균", placeholder="예: 1.528")
     with col2:
         g2_trend = st.text_input("📉 1학년 대비 성적 추이", placeholder="예: 전체적으로 상승세, 국어 특히 우수")
         g2_subject = st.text_input("📚 3학년 선택 과목 고민", placeholder="예: 심화수학을 할지 말지 고민 중")
-    user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 5등급제 내신: {g2_grade}\n- 1학년 대비 성적 추이: {g2_trend}\n- 3학년 선택 고민 과목: {g2_subject}"
+    
+    calc_msg = ""
+    if g2_grade:
+        g9_val = calculate_9_grade(g2_grade)
+        if g9_val: calc_msg = f" (양명여고 산출기 기준 9등급제 환산: {g9_val:.3f}등급)"
+        
+    user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 5등급 내신: {g2_grade}{calc_msg}\n- 1학년 대비 추이: {g2_trend}\n- 3학년 선택 고민 과목: {g2_subject}"
 
 else: # 3학년
     col1, col2, col3 = st.columns(3)
@@ -221,9 +261,8 @@ else: # 3학년
         s_region = st.text_input("🗺️ 선호 권역", value="인서울 및 수도권")
     with col_q2:
         s_minimum = st.text_input("📝 수능 최저 충족 가능성", placeholder="예: 2합 6 안정")
-        s_interview = st.text_input("🎤 면접 성향", placeholder="예: 말하기 자신감 높음")
+        s_interview = st.text_input("🎤 면접 상태 및 성향", placeholder="예: 말하기 자신감 높음")
     user_context = f"- 1지망 대학/학과: {target_univ} / {target_major}\n- 내신: {student_grade}\n- 전략: {s_strategy} / {s_region}\n- 수능 최저: {s_minimum}\n- 면접: {s_interview}"
-
 
 # 🔥 PDF 텍스트 추출 및 원천 마스킹 로직
 if student_file:
@@ -249,26 +288,31 @@ if target_major:
     if admission_stats_text and "오류" not in admission_stats_text:
         with st.expander(f"📊 '{target_major}' 양명여고 합불 통계 미리보기"): st.text(admission_stats_text)
 
-
 # 🔥 공통 보안 지침 (프롬프트 킬 스위치)
 COMMON_SECURITY_PROMPT = """
 [Security & Exception Handling (🚨 초강력 개인정보 보호 절대 원칙)]
 1. 데이터 검증: 데이터가 없으면 "⚠️ 생기부 데이터가 입력되지 않았습니다."라고 출력하고 즉시 멈출 것.
-2. 🚨 실명 노출 절대 금지(Kill Switch): 입력된 생기부 본문(세특, 행특 등) 텍스트 안에 실수로 학생의 '실명(이름)'이 남아 있더라도, 분석 리포트 출력 시에는 **절대로, 어떠한 경우에도 학생의 실명을 그대로 출력하지 마십시오.**
-3. 강제 개명: 리포트 내에서 학생을 지칭해야 할 때는 무조건 **'학생 A'** 또는 **'해당 학생'**이라는 단어만 강제로 사용할 것.
+2. 🚨 실명 노출 절대 금지(Kill Switch): 입력된 생기부 본문 텍스트 안에 실수로 학생의 '실명'이 남아 있더라도, 절대로 실명을 출력하지 마십시오.
+3. 강제 개명: 무조건 '학생 A' 또는 '해당 학생'으로 지칭할 것.
 4. 출력 헤더 표기: 답변 최상단에 "[현재 분석 대상: 학생 A]" 라고 명시할 것.
 """
 
-# 🔥 학년별 프롬프트 정의
+# 🔥 환산 내신 절대 준수 규칙 (1, 2학년)
+GRADE_CONVERT_PROMPT = """
+[🚨 내신 환산 절대 규칙 (환각 방지)]
+학생 데이터에 '양명여고 산출기 기준 9등급제 환산' 점수가 주어지면, AI는 절대 임의로 5등급 백분위를 추정하지 마십시오. 반드시 제공된 9등급제 환산 점수를 100% 신뢰하여 과거 입결 데이터 비교 및 대학 라인 산정의 '절대 기준점'으로 삼으십시오.
+"""
+
 PROMPT_1 = f"""
 [System Persona] 당신은 '양명여자고등학교 1학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
 
 {COMMON_SECURITY_PROMPT}
+{GRADE_CONVERT_PROMPT}
 
 [🚨 절대 규칙 - 표 깨짐 및 세특 대필 방지]
 1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
 2. 1번 문항 등급 판정 시 S/A/B/C 중 하나를 반드시 입력하세요.
-3. [경고] Step 3 작성 시 '완성형 세특 문장(생기부 기재용)'을 절대 쓰지 마십시오. 교사의 평가권을 침해합니다. 반드시 '탐구 주제명'과 학생이 해볼 수 있는 '행동/수행 방안(액션 플랜)'만 제시하십시오.
+3. [경고] Step 3 작성 시 '완성형 세특 문장'을 절대 쓰지 마십시오. 반드시 '탐구 주제명'과 '수행 방안(액션 플랜)'만 제시하십시오.
 
 [출력 양식 - 이대로만 출력할 것]
 1. 진로 및 계열 심층 분석
@@ -278,9 +322,9 @@ PROMPT_1 = f"""
 | 학과명 | 내용<br>내용 | 링크 예시 |
 
 2. 데이터 기반 입결 및 목표 설정
-| 5등급제 내신 구간 | 예상 9등급제 환산치 | 양명여고/일반적 지원 전략 및 목표 설정 가이드 |
+| 5등급제 내신 구간 | 양명 자체 9등급제 환산치 | 양명여고/일반적 지원 전략 및 목표 설정 가이드 |
 | :--- | :--- | :--- |
-| (학생 현재 구간) | X.X~X.X 추정 | 내용<br>내용 |
+| (학생 현재 5등급제 성적) | (자동 환산된 9등급제 성적) | 내용<br>내용 |
 
 3. 1학년 공통 과목 맞춤형 '탐구 주제' 추천 (완성 문장 절대 금지)
 | 공통 과목 | 목표 역량 | 추천 탐구 주제명 및 구체적 수행 방안 (액션 플랜) |
@@ -311,6 +355,7 @@ PROMPT_2 = f"""
 [System Persona] 당신은 '양명여자고등학교 2학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
 
 {COMMON_SECURITY_PROMPT}
+{GRADE_CONVERT_PROMPT}
 
 [🚨 절대 규칙 - 표 깨짐 방지]
 1. 표 셀(Cell) 내부 줄바꿈은 무조건 `<br>` 태그를 사용하십시오. 엔터 금지.
@@ -318,10 +363,10 @@ PROMPT_2 = f"""
 
 [출력 양식 - 이대로만 출력할 것]
 1. 2학년 중간 점검 및 역량 평가
-* 총평: (전공 적합성 깊이 2~3줄 요약)
+* font-size 조절 및 총평: (전공 적합성 깊이 2~3줄 요약)
 | 평가 영역 | 평가 등급 | 2학년 수준 구체적 성취 (개조식) | 돋보이는 강점 및 보완 요망 약점 |
 | :--- | :---: | :--- | :--- |
-| 학업 역량 | [S/A/B/C] | * 5등급제: [ ] (9등급제 추정: [ ])<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
+| 학업 역량 | [S/A/B/C] | * 5등급제: [ ] (양명 자체 9등급제 환산: [ ])<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
 | 진로 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
 | 공동체 역량 | [S/A/B/C] | * 내용<br>* 내용 | * 강점: 내용<br>* 약점: 내용 |
 
@@ -353,7 +398,6 @@ PROMPT_2 = f"""
 * (학부모 및 학생 상담 시 강조해야 할 2학년 핵심 과제 2~3줄 요약)
 """
 
-# 🔥 [3학년 프롬프트 신규 업데이트: 비교 우위 추천 및 원포인트 전략 탑재!]
 PROMPT_3 = f"""
 [System Persona] 당신은 '양명여자고등학교 3학년 전담 대입 컨설팅 전문가'입니다. 수시 원서 접수 실전용입니다.
 
@@ -380,7 +424,7 @@ PROMPT_3 = f"""
 | ③ 융합 (미래 유망) | | * 내용 |
 
 3. 수시 6장 지원 대학 포트폴리오
-* (주의: '추천 사유 및 합격 가능성 분석' 작성 시, 단순히 추천 이유만 적지 말고 반드시 타 전형(예: 교과전형 등)과 비교하여 "왜 이 학생에게 이 전형(예: 종합전형)으로 지원하는 것이 더 유리한지" 비교 우위 분석을 명시할 것)
+* (주의: '추천 사유 및 합격 가능성 분석' 작성 시, 단순히 추천 이유만 적지 말고 반드시 타 전형(예: 교과전형 등)과 비교하여 "왜 이 학생에게 이 전형으로 지원하는 것이 더 유리한지" 비교 우위 분석을 명시할 것)
 | 지원 전략 | 추천 대학 | 추천 전형 | 추천 사유 및 합격 가능성 분석 (전형 비교 우위 분석 필수) |
 | :--- | :--- | :--- | :--- |
 | 상향 1 | | | * 내용<br>* 내용 |
@@ -401,7 +445,7 @@ PROMPT_3 = f"""
 | 주제 1 | | * 1단계: 내용<br>* 2단계: 내용<br>* 3단계: 내용<br>* 4단계: 내용 |
 
 6. 핵심 상담 포인트
-* 🎯 **[원포인트 지원 전략]**: (예시: 성신여대 지원 시, 내신 컷이 높은 교과 전형보다는 전공 적합성을 높게 평가하는 학종(자기주도인재 등) 전형으로 우회하는 것이 합격 확률을 40% 이상 높일 수 있음. 이처럼 해당 학생의 기록을 바탕으로 구체적인 전형 간 비교 우위 전략을 1문장으로 반드시 출력할 것)
+* 🎯 **[원포인트 지원 전략]**: (예시: 성신여대 지원 시, 내신 컷이 높은 교과 전형보다는 전공 적합성을 높게 평가하는 학종 전형으로 우회하는 것이 합격 확률을 40% 이상 높일 수 있음. 이처럼 해당 학생의 기록을 바탕으로 구체적인 전형 간 비교 우위 전략을 1문장으로 반드시 출력할 것)
 * (교사용 종합 최종 조언 1~2줄 요약)
 """
 
