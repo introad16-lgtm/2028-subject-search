@@ -113,6 +113,33 @@ def get_local_admission_stats(file_path, target_univ, target_major):
         return stats_str
     except Exception as e: return f"데이터 분석 오류: {e}"
 
+# --- 📚 대학 공식 권장과목 검색 (신규 추가) ---
+@st.cache_data
+def get_recommended_subjects(file_path, target_univ, target_major):
+    if not os.path.exists(file_path): return ""
+    try:
+        df = pd.read_excel(file_path, skiprows=2, engine='openpyxl')
+        df['대학명'] = df.iloc[:, 2].fillna('').astype(str)
+        df['모집단위'] = df.iloc[:, 3].fillna('').astype(str) + " " + df.iloc[:, 4].fillna('').astype(str)
+        df['핵심과목'] = df.iloc[:, 5].fillna('-').astype(str)
+        df['권장과목'] = df.iloc[:, 6].fillna('-').astype(str) if len(df.columns) > 6 else '-'
+        df['비고'] = df.iloc[:, 7].fillna('-').astype(str) if len(df.columns) > 7 else '-'
+        
+        result = df.copy()
+        if target_univ: result = result[result['대학명'].str.contains(target_univ, na=False, case=False)]
+        if target_major: result = result[result['모집단위'].str.contains(target_major, na=False, case=False)]
+        
+        if result.empty and target_major: # 대학명이 없거나 안 맞으면 학과로만 재검색 (특히 1학년용)
+             result = df[df['모집단위'].str.contains(target_major, na=False, case=False)]
+             
+        if result.empty: return ""
+        
+        rec_str = "📚 [대학 공식 발표 핵심/권장 이수 과목 데이터]\n"
+        for _, row in result.head(3).iterrows(): # 토큰 낭비 방지를 위해 최대 3개만 추출
+            rec_str += f"- {row['대학명']} {row['모집단위'].strip()} : [핵심] {row['핵심과목']} / [권장] {row['권장과목']}\n"
+        return rec_str
+    except Exception: return ""
+
 # --- 1. 페이지 설정 및 디자인 ---
 st.set_page_config(page_title="양명여고 생기부 분석기", page_icon="📊", layout="wide")
 
@@ -201,6 +228,7 @@ selected_grade = st.radio("👨‍🏫 분석할 학생의 학년을 선택하�
 
 REF_PDF_PATH = "우수생기부통합.pdf"
 EXCEL_FILE_PATH = "양명여고_합불데이터(2022_2025).xlsx"
+REC_SUBJECTS_FILE_PATH = "data.xlsx"  # 신규 권장과목 데이터 파일
 reference_record = load_local_pdf(REF_PDF_PATH)
 
 st.markdown("---")
@@ -211,7 +239,7 @@ mask_name = st.text_input("🛡️ 텍스트 원천 차단용 학생 이름 (선
 student_file = st.file_uploader("나이스 생기부 PDF 업로드", type=["pdf"])
 
 # 🔄 학년별 동적 입력 폼
-target_univ, target_major, admission_stats_text, final_student_record = "", "", "", ""
+target_univ, target_major, admission_stats_text, rec_subjects_text, final_student_record = "", "", "", "", ""
 user_context = ""
 
 if selected_grade == "1학년 (진로 탐색 및 기초 설계)":
@@ -284,9 +312,16 @@ if student_file:
     final_student_record = st.session_state.final_text
 
 if target_major:
+    # 1. 합불 통계 로드
     admission_stats_text = get_local_admission_stats(EXCEL_FILE_PATH, target_univ, target_major)
     if admission_stats_text and "오류" not in admission_stats_text:
         with st.expander(f"📊 '{target_major}' 양명여고 합불 통계 미리보기"): st.text(admission_stats_text)
+    
+    # 2. 신규: 1, 2학년일 경우 대학 권장과목 데이터 로드
+    if "1학년" in selected_grade or "2학년" in selected_grade:
+        rec_subjects_text = get_recommended_subjects(REC_SUBJECTS_FILE_PATH, target_univ, target_major)
+        if rec_subjects_text:
+            with st.expander(f"📚 '{target_major}' 관련 대학 공식 권장과목 미리보기"): st.text(rec_subjects_text)
 
 # 🔥 공통 보안 지침 (데이터 부족 핑계 금지!)
 COMMON_SECURITY_PROMPT = """
@@ -300,6 +335,7 @@ COMMON_SECURITY_PROMPT = """
 GRADE_CONVERT_PROMPT = """
 [🚨 내신 환산 절대 규칙 및 데이터 예외 처리 (환각 방지)]
 1. 학생 데이터에 '양명여고 산출기 기준 9등급제 환산' 점수가 주어지면, AI는 절대 임의로 5등급 백분위를 추정하지 마십시오. 반드시 제공된 9등급제 환산 점수를 100% 신뢰하여 과거 입결 데이터 비교 및 대학 라인 산정의 '절대 기준점'으로 삼으십시오.
+2. 내신 점수나 대학 정보가 비어있어도 생기부 텍스트가 존재하면 절대 멈추지 말고 분석을 진행하십시오.
 """
 
 # 🔥 마크다운 표 생성 필수 규칙 (공통)
@@ -413,7 +449,6 @@ PROMPT_2 = f"""
 """
 
 # ----------------- 3학년 프롬프트 -----------------
-# 💡 단 1글자도 변경 없이 기존 잘 작동하는 코드 100% 동일 유지
 PROMPT_3 = f"""
 [System Persona] 당신은 '양명여자고등학교 3학년 전담 대입 컨설팅 전문가'입니다. 수시 원서 접수 실전용입니다.
 
@@ -491,15 +526,17 @@ if st.button("🚀 선택 학년 AI 생기부 분석 실행", type="primary", us
                     {ref_text}
                     [2. 양명여고 합불 통계]
                     {stats_text}
+                    [3. 📚 대학 공식 권장과목 데이터 (1, 2학년 과목 추천 시 반드시 반영할 것)]
+                    {rec_subjects_text}
                     
                     =======================================
-                    [3. 🔥 분석 대상 학생 사전 진단 맥락]
+                    [4. 🔥 분석 대상 학생 사전 진단 맥락]
                     {user_context}
                     
                     [🚨 실제 생기부 텍스트]
                     {final_student_record}
                     =======================================
-                    최종 지시: 위 [3번]의 실제 학생 1명만을 대상으로 지정된 학년의 목차와 표 양식을 100% 동일하게 유지하며 출력하세요. (셀 내부 줄바꿈은 <br> 사용)
+                    최종 지시: 위 [4번]의 실제 학생 1명만을 대상으로 지정된 학년의 목차와 표 양식을 100% 동일하게 유지하며 출력하세요. (셀 내부 줄바꿈은 <br> 사용)
                     """
                     
                     st.session_state.chat_session = model.start_chat(history=[])
