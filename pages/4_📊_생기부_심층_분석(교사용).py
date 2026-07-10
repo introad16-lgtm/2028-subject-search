@@ -129,13 +129,13 @@ def get_recommended_subjects(file_path, target_univ, target_major):
         if target_univ: result = result[result['대학명'].str.contains(target_univ, na=False, case=False)]
         if target_major: result = result[result['모집단위'].str.contains(target_major, na=False, case=False)]
         
-        if result.empty and target_major: # 대학명이 없거나 안 맞으면 학과로만 재검색 (특히 1학년용)
+        if result.empty and target_major: # 대학명이 없거나 안 맞으면 학과로만 재검색
              result = df[df['모집단위'].str.contains(target_major, na=False, case=False)]
              
         if result.empty: return ""
         
         rec_str = "📚 [대학 공식 발표 핵심/권장 이수 과목 데이터]\n"
-        for _, row in result.head(3).iterrows(): # 토큰 낭비 방지를 위해 최대 3개만 추출
+        for _, row in result.head(3).iterrows():
             rec_str += f"- {row['대학명']} {row['모집단위'].strip()} : [핵심] {row['핵심과목']} / [권장] {row['권장과목']}\n"
         return rec_str
     except Exception: return ""
@@ -228,7 +228,7 @@ selected_grade = st.radio("👨‍🏫 분석할 학생의 학년을 선택하�
 
 REF_PDF_PATH = "우수생기부통합.pdf"
 EXCEL_FILE_PATH = "양명여고_합불데이터(2022_2025).xlsx"
-REC_SUBJECTS_FILE_PATH = "data.xlsx"  # 신규 권장과목 데이터 파일
+REC_SUBJECTS_FILE_PATH = "data.xlsx"  
 reference_record = load_local_pdf(REF_PDF_PATH)
 
 st.markdown("---")
@@ -317,13 +317,13 @@ if target_major:
     if admission_stats_text and "오류" not in admission_stats_text:
         with st.expander(f"📊 '{target_major}' 양명여고 합불 통계 미리보기"): st.text(admission_stats_text)
     
-    # 2. 신규: 1, 2학년일 경우 대학 권장과목 데이터 로드
+    # 2. 1, 2학년일 경우 대학 권장과목 데이터 로드
     if "1학년" in selected_grade or "2학년" in selected_grade:
         rec_subjects_text = get_recommended_subjects(REC_SUBJECTS_FILE_PATH, target_univ, target_major)
         if rec_subjects_text:
             with st.expander(f"📚 '{target_major}' 관련 대학 공식 권장과목 미리보기"): st.text(rec_subjects_text)
 
-# 🔥 공통 보안 지침 (데이터 부족 핑계 금지!)
+# 🔥 공통 보안 지침 
 COMMON_SECURITY_PROMPT = """
 [Security & Exception Handling (🚨 초강력 개인정보 보호 절대 원칙)]
 1. 🚨 실명 노출 절대 금지(Kill Switch): 입력된 생기부 본문 텍스트 안에 실수로 학생의 '실명'이 남아 있더라도, 절대로 실명을 출력하지 마십시오.
@@ -346,6 +346,17 @@ TABLE_FORMAT_PROMPT = """
 3. 1번 문항 등급 판정 시 S/A/B/C 중 하나를 반드시 입력하세요.
 """
 
+# 🔥 2022 개정 교육과정 과목명 절대 준수 (1, 2학년 전용)
+CURRICULUM_2022_PROMPT = """
+[🚨 2022 개정 교육과정 과목명 준수 절대 규칙]
+학생에게 2·3학년 선택 과목을 추천할 때, 과거 2015 교육과정의 명칭(예: 물리학Ⅱ, 화학Ⅱ, 생명과학Ⅱ, 지구과학Ⅱ 등)을 절대 사용하지 마십시오. 반드시 아래의 2022 개정 교육과정 '진로 선택' 및 '융합 선택' 과목명을 사용해야 합니다.
+- 물리: 역학과 에너지, 전자기와 양자
+- 화학: 물질과 에너지, 화학 반응의 세계
+- 생명: 세포와 물질대사, 생물의 유전
+- 지구: 지구시스템과학, 행성우주과학
+- 융합: 과학의 역사와 문화, 기후변화와 환경생태, 융합과학 탐구
+"""
+
 # ----------------- 1학년 프롬프트 -----------------
 PROMPT_1 = f"""
 [System Persona] 당신은 '양명여자고등학교 1학년 전담 대입 컨설팅 전문가'입니다. 2022 개정 교육과정 세대입니다.
@@ -353,6 +364,7 @@ PROMPT_1 = f"""
 {COMMON_SECURITY_PROMPT}
 {GRADE_CONVERT_PROMPT}
 {TABLE_FORMAT_PROMPT}
+{CURRICULUM_2022_PROMPT}
 4. [경고] Step 3 작성 시 '완성형 세특 문장'을 절대 쓰지 마십시오. 반드시 '탐구 주제명'과 '수행 방안(액션 플랜)'만 제시하십시오.
 
 [출력 양식 - 이대로만 출력할 것]
@@ -405,6 +417,7 @@ PROMPT_2 = f"""
 {COMMON_SECURITY_PROMPT}
 {GRADE_CONVERT_PROMPT}
 {TABLE_FORMAT_PROMPT}
+{CURRICULUM_2022_PROMPT}
 
 [출력 양식 - 이대로만 출력할 것]
 1. 2학년 중간 점검 및 역량 평가
@@ -449,6 +462,7 @@ PROMPT_2 = f"""
 """
 
 # ----------------- 3학년 프롬프트 -----------------
+# 💡 단 1글자도 변경 없이 기존 잘 작동하는 코드 100% 동일 유지
 PROMPT_3 = f"""
 [System Persona] 당신은 '양명여자고등학교 3학년 전담 대입 컨설팅 전문가'입니다. 수시 원서 접수 실전용입니다.
 
