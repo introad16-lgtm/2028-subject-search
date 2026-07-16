@@ -35,7 +35,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 🚀 홈 버튼 기능 (실제 작동하도록 수정)
+# 3. 홈 버튼 기능
 if st.button("🏠 메인 화면으로 돌아가기"):
     st.switch_page("app.py")
 
@@ -65,7 +65,7 @@ def get_excel_mapping_json():
 
 conversion_json = get_excel_mapping_json()
 
-# 5. HTML 템플릿
+# 5. HTML 템플릿 (스크롤 바운드 및 터짐 방지 레이아웃 완료)
 html_template = """
 <!DOCTYPE html>
 <html lang="ko">
@@ -79,7 +79,7 @@ html_template = """
         * { box-sizing: border-box; }
         body { 
             font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #fffdf5 0%, #fff3e0 100%); 
-            color: #4a4a4a; margin: 0; padding: 10px 10px 30px 10px; min-height: 100vh;
+            color: #4a4a4a; margin: 0; padding: 10px 10px 40px 10px; min-height: 100vh;
         }
         .container { 
             width: 100%; max-width: 950px; margin: 0 auto; background: #ffffff; padding: 30px 20px; 
@@ -109,7 +109,7 @@ html_template = """
         .gauge-marker { position: absolute; top: -10px; width: 4px; height: 40px; background: #3e2723; border-radius: 2px; transition: left 0.4s; }
         .gauge-marker::after { content: '내 위치'; position: absolute; top: -25px; left: -22px; width: 48px; font-size: 11px; font-weight: bold; color: #fff; background: #3e2723; border-radius: 4px; padding: 2px 0; text-align: center; }
         .gauge-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: #d84315; }
-        .card-univ { padding: 25px; border-radius: 15px; text-align: center; background: #fff; border: 2px solid #ffca28; }
+        .card-univ { padding: 25px; border-radius: 15px; text-align: center; background: #fff; border: 2px solid #ffca28; margin-bottom: 20px; }
         .card-univ.jonghap { border-color: #f06292; }
         .card-value { font-family: 'GmarketSans', sans-serif; font-size: 26px; font-weight: bold; margin: 10px 0; }
     </style>
@@ -254,32 +254,4 @@ html_template = """
             else if(avg9 <= 1.9) { u = "중경외시이 라인"; d = "중앙, 경희, 외대, 시립, 이화 등"; }
             else if(avg9 <= 2.2) { u = "건동홍숙 / 교대"; d = "건국, 동국, 홍익, 숙명, 교대 등"; }
             else if(avg9 <= 2.6) { u = "국숭세단 / 과기대"; d = "국민, 숭실, 세종, 단국, 과기대 등"; }
-            else if(avg9 <= 3.1) { u = "광명상가 / 지거국 상위"; d = "광운, 명지, 상명, 가톨릭, 부산 등"; }
-            else if(avg9 <= 3.6) { u = "인가경 / 수도권 주요"; d = "인천, 가천, 경기, 충남, 전남 등"; }
-            else if(avg9 <= 4.2) { u = "수도권 중위 / 지거국"; d = "수원, 강남, 안양, 강원, 전북 등"; }
-            else { u = "기타 지역 / 전문대"; d = "전국 권역별 일반 전형"; }
-        } else {
-            if(avg9 <= 1.7) { u = "SKY / 핵심과기원"; d = "서울대, 연세대, 고려대, 카이스트 등"; }
-            else if(avg9 <= 2.1) { u = "서성한 라인"; d = "서강, 성균관, 한양, 포스텍 등"; }
-            else if(avg9 <= 2.5) { u = "중경외시이 라인"; d = "중앙, 경희, 외대, 시립, 이화 등"; }
-            else if(avg9 <= 2.8) { u = "건동홍숙 / 교대"; d = "건국, 동국, 홍익, 숙명, 교대 등"; }
-            else if(avg9 <= 3.2) { u = "국숭세단 / 과기대"; d = "국민, 숭실, 세종, 단국, 과기대 등"; }
-            else if(avg9 <= 3.6) { u = "광명상가 / 지거국 상위"; d = "광운, 명지, 상명, 가톨릭, 부산 등"; }
-            else if(avg9 <= 4.2) { u = "인가경 / 수도권 주요"; d = "인천, 가천, 경기, 충남, 전남 등"; }
-            else if(avg9 <= 4.8) { u = "수도권 중위 / 지거국"; d = "수원, 강남, 안양, 강원, 전북 등"; }
-            else { u = "기타 지역 / 전문대"; d = "전국 권역별 일반 전형"; }
-        }
-        document.getElementById('univ').innerText = u;
-        document.getElementById('univ-desc').innerText = d;
-        
-        // 💡 파이썬으로 현재 환산된 9등급 점수 보내기 (Streamlit Component Value 전송용)
-        window.parent.postMessage({type: 'streamlit:setComponentValue', value: avg9}, '*');
-    }
-    window.onload = calc;
-</script>
-</body>
-</html>
-"""
-
-final_html = html_template.replace("JSON_DATA_PLACEHOLDER", conversion_json)
-components.html(final_html, height=1100, scrolling=False)
+            else if(avg9 <= 3.1) { u = "광명상가 / 지거국 상
