@@ -96,7 +96,7 @@ html_template = """
     <h4>♥ 양명여고 진로진학부 ♥</h4>
     <div class="school-badge">
         [2026 대입 주요대학 3개년 컷오프] + [자체 정밀 변환 알고리즘]
-        <span style="display:block; font-size:12px; margin-top:5px;">✨ 무거운 엑셀 연동 없이 독립적이고 빠른 산출을 지원합니다.</span>
+        <span style="display:block; font-size:12px; margin-top:5px;"></span>
     </div>
     <div class="toggle-section">
         <div class="toggle-btn active-gyogwa" id="btn-gyogwa" onclick="setMode('gyogwa')">📘 교과 전형</div>
