@@ -91,7 +91,7 @@ html_template = """
 <div class="container">
     <div class="header-wrapper">
         <img src="logo.jpeg" alt="로고" class="header-logo" onerror="this.style.display='none'">
-        <h1>2028 대입 교과/종합 상담</h1>
+        <h1>2028 등급 변환기</h1>
     </div>
     <h4>♥ 양명여고 진로진학부 ♥</h4>
     <div class="school-badge">
