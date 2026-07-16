@@ -7,21 +7,35 @@ import json
 # 1. 페이지 설정
 st.set_page_config(page_title="2028 양명여고 진학 상담", page_icon="📊", layout="wide")
 
-# 2. 스트림릿 배경 스타일 (선생님 UI와 어울리는 연한 핑크/크림)
+# 2. 스트림릿 배경 스타일
 st.markdown("""
 <style>
     .stApp { background-color: #FFFDF5; } 
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     .block-container { padding: 0 !important; max-width: 100% !important; }
-    /* 홈 버튼 스타일 */
+    
+    /* 🏠 홈 버튼 디자인 */
     .stButton > button {
-        margin: 10px; background-color: white; color: #f57c00;
-        border: 2px solid #ffe082; border-radius: 10px; font-weight: bold;
+        margin: 15px 0 0 15px !important;
+        background-color: white !important; 
+        color: #f57c00 !important;
+        border: 2px solid #ffe082 !important; 
+        border-radius: 10px !important; 
+        font-weight: 800 !important;
+        padding: 8px 20px !important;
+        box-shadow: 0 2px 5px rgba(255, 165, 0, 0.1) !important;
+        transition: all 0.3s ease !important;
+    }
+    .stButton > button:hover {
+        background-color: #fff8e1 !important;
+        border-color: #ff9800 !important;
+        color: #e65100 !important;
+        transform: translateY(-2px) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 홈 버튼
+# 3. 🚀 홈 버튼 기능 (실제 작동하도록 수정)
 if st.button("🏠 메인 화면으로 돌아가기"):
     st.switch_page("app.py")
 
@@ -29,15 +43,13 @@ if st.button("🏠 메인 화면으로 돌아가기"):
 @st.cache_data
 def get_excel_mapping_json():
     target_filename = "수시NAVI(등급변환표 탑재).xlsx"
-    # 파일 경로 후보군 체크
     paths = [target_filename, f"../{target_filename}", f"pages/{target_filename}"]
     file_path = next((p for p in paths if os.path.exists(p)), None)
     
     if not file_path:
-        return "{}" # 파일 없을 시 빈 데이터 반환
+        return "{}" 
         
     try:
-        # '기타' 시트에서 G열(index 6)과 J열(index 9) 읽기
         df = pd.read_excel(file_path, sheet_name='기타', header=None, engine='openpyxl')
         mapping = {}
         for i in range(len(df)):
@@ -53,7 +65,7 @@ def get_excel_mapping_json():
 
 conversion_json = get_excel_mapping_json()
 
-# 5. HTML 템플릿 (파이썬 문법 충돌을 방지하기 위해 f-string을 쓰지 않음)
+# 5. HTML 템플릿
 html_template = """
 <!DOCTYPE html>
 <html lang="ko">
@@ -67,7 +79,7 @@ html_template = """
         * { box-sizing: border-box; }
         body { 
             font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #fffdf5 0%, #fff3e0 100%); 
-            color: #4a4a4a; margin: 0; padding: 20px 10px; min-height: 100vh;
+            color: #4a4a4a; margin: 0; padding: 10px 10px 30px 10px; min-height: 100vh;
         }
         .container { 
             width: 100%; max-width: 950px; margin: 0 auto; background: #ffffff; padding: 30px 20px; 
@@ -259,6 +271,9 @@ html_template = """
         }
         document.getElementById('univ').innerText = u;
         document.getElementById('univ-desc').innerText = d;
+        
+        // 💡 파이썬으로 현재 환산된 9등급 점수 보내기 (Streamlit Component Value 전송용)
+        window.parent.postMessage({type: 'streamlit:setComponentValue', value: avg9}, '*');
     }
     window.onload = calc;
 </script>
@@ -266,8 +281,5 @@ html_template = """
 </html>
 """
 
-# 6. JSON 데이터 안전하게 치환 (파이썬 SyntaxError 방지)
 final_html = html_template.replace("JSON_DATA_PLACEHOLDER", conversion_json)
-
-# 7. 컴포넌트 출력
 components.html(final_html, height=1100, scrolling=False)
