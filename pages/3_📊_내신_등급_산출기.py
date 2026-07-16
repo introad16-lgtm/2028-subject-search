@@ -178,14 +178,9 @@ html_template = """
     </div>
 </div>
 
-<script id="conversion-data" type="application/json">
-__JSON_DATA__
-</script>
-
 <script>
-    // 엑셀에서 넘어온 데이터 파싱
-    const rawData = document.getElementById('conversion-data').textContent;
-    const conversionMap = JSON.parse(rawData || '{}');
+    // 💡 안전하게 치환된 엑셀 데이터 테이블
+    const conversionMap = __CONVERSION_JSON__;
     
     let mode = 'gyogwa';
 
@@ -224,7 +219,7 @@ __JSON_DATA__
     // 엑셀 데이터 매핑 알고리즘
     function map5to9(g5) {
         let key = (Math.round(g5 * 100) / 100).toFixed(2);
-        if (conversionMap[key]) return conversionMap[key];
+        if (conversionMap && conversionMap[key]) return conversionMap[key];
         
         const pts = [[1.0, 1.0], [1.1, 1.35], [1.2, 1.65], [1.31, 1.99], [1.478, 2.345], [1.715, 2.753], [2.004, 3.261], [3.0, 6.0], [5.0, 9.0]];
         if (g5 <= 1.0) return 1.0; if (g5 >= 5.0) return 9.0;
@@ -262,7 +257,7 @@ __JSON_DATA__
             else if(avg9 <= 2.6) { u = "국숭세단 / 과기대"; d = "국민, 숭실, 세종, 단국, 과기대 등"; }
             else if(avg9 <= 3.1) { u = "광명상가 / 지거국 상위"; d = "광운, 명지, 상명, 가톨릭, 부산 등"; }
             else if(avg9 <= 3.6) { u = "인가경 / 수도권 주요"; d = "인천, 가천, 경기, 충남, 전남 등"; }
-            else if(avg9 <= 4.2) { u = "수도권 중위 / 지거국"; d = "수원, 강남, 안양, 강원, 전북 등"; }
+            else if(avg9 <= 4.2) { d = "수도권 중위 / 지거국"; d = "수원, 강남, 안양, 강원, 전북 등"; }
             else { u = "기타 지역 / 전문대"; d = "전국 권역별 일반 전형"; }
         } else {
             if(avg9 <= 1.7) { u = "SKY / 핵심과기원"; d = "서울대, 연세대, 고려대, 카이스트 등"; }
@@ -282,10 +277,7 @@ __JSON_DATA__
 </script>
 </body>
 </html>
-"""
+""".replace("__CONVERSION_JSON__", conversion_json_str)
 
-# HTML의 빈칸에 엑셀 JSON 데이터를 문법 에러 없이 교체 주입
-final_html = html_template.replace("__JSON_DATA__", conversion_json_str)
-
-# 6. 컴포넌트 높이 1500px 확보 및 스크롤 완전 오픈 (절대 잘리지 않음)
+# 6. 컴포넌트 렌더링
 components.html(final_html, height=1500, scrolling=True)
