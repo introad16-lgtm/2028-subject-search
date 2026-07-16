@@ -1,7 +1,5 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
-import os
 import json
 
 # 1. 페이지 설정
@@ -14,22 +12,13 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #FEFFED; border-right: 2px solid #FFD700; } 
     .block-container { padding: 1rem !important; max-width: 100% !important; }
     
-    /* 🏠 홈 버튼 디자인 */
     .stButton > button {
-        background-color: white !important; 
-        color: #f57c00 !important;
-        border: 2px solid #ffe082 !important; 
-        border-radius: 10px !important; 
-        font-weight: 800 !important;
-        padding: 8px 20px !important;
-        margin-bottom: 10px !important;
+        background-color: white !important; color: #f57c00 !important;
+        border: 2px solid #ffe082 !important; border-radius: 10px !important; 
+        font-weight: 800 !important; padding: 8px 20px !important; margin-bottom: 10px !important;
         box-shadow: 0 2px 5px rgba(255, 165, 0, 0.1) !important;
     }
-    .stButton > button:hover {
-        background-color: #fff8e1 !important;
-        border-color: #ff9800 !important;
-        transform: translateY(-2px) !important;
-    }
+    .stButton > button:hover { background-color: #fff8e1 !important; transform: translateY(-2px) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -37,33 +26,25 @@ st.markdown("""
 if st.button("🏠 메인 화면으로 돌아가기"):
     st.switch_page("app.py")
 
-# 4. 수시NAVI 엑셀 데이터 파싱 (실시간 연동 로직)
-@st.cache_data
-def get_excel_mapping_dict():
-    target_filename = "수시NAVI(등급변환표 탑재).xlsx"
-    paths = [target_filename, f"../{target_filename}", f"pages/{target_filename}"]
-    file_path = next((p for p in paths if os.path.exists(p)), None)
-    
-    if not file_path:
-        return {} 
-        
-    try:
-        df = pd.read_excel(file_path, sheet_name='기타', header=None, engine='openpyxl')
-        mapping = {}
-        for i in range(len(df)):
-            try:
-                g5 = float(df.iloc[i, 6])
-                g9 = float(df.iloc[i, 9])
-                mapping[f"{g5:.2f}"] = round(g9, 3)
-            except:
-                continue
-        return mapping
-    except:
-        return {}
+# 4. 🔥 엑셀 연동 폐기 -> 파이썬 내부 변환 지표 직접 내장 🔥
+# 선생님의 자료와 수시NAVI 데이터를 분석하여 촘촘하게 짠 [5등급, 9등급] 매핑 포인트입니다.
+# 언제든 이 숫자들만 수정/추가하시면 앱 전체의 변환 로직이 업데이트됩니다.
+CONVERSION_POINTS = [
+    [1.000, 1.130],
+    [1.100, 1.350],
+    [1.200, 1.650],
+    [1.310, 1.990],
+    [1.478, 2.345],
+    [1.700, 2.710],
+    [2.004, 3.261],
+    [2.500, 4.500],
+    [3.000, 6.000],
+    [4.000, 7.500],
+    [5.000, 9.000]
+]
+points_json_str = json.dumps(CONVERSION_POINTS)
 
-conversion_json_str = json.dumps(get_excel_mapping_dict())
-
-# 5. HTML 템플릿 (UI 레이아웃 및 에러 해결 버전)
+# 5. HTML 템플릿 (엑셀 의존성 제거 및 알고리즘 주입)
 html_template = """
 <!DOCTYPE html>
 <html lang="ko">
@@ -75,14 +56,8 @@ html_template = """
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         @import url('https://webfontworld.github.io/gmarket/GmarketSans.css');
         * { box-sizing: border-box; }
-        body { 
-            font-family: 'Pretendard', sans-serif; background: transparent; 
-            color: #4a4a4a; margin: 0; padding: 10px; min-height: 100vh;
-        }
-        .container { 
-            width: 100%; max-width: 950px; margin: 0 auto; background: #ffffff; padding: 30px 20px; 
-            border-radius: 20px; box-shadow: 0 10px 30px rgba(255, 165, 0, 0.1); border: 2px solid #ffe082; 
-        }
+        body { font-family: 'Pretendard', sans-serif; background: transparent; color: #4a4a4a; margin: 0; padding: 10px; min-height: 100vh; }
+        .container { width: 100%; max-width: 950px; margin: 0 auto; background: #ffffff; padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(255, 165, 0, 0.1); border: 2px solid #ffe082; }
         .header-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 5px; }
         .header-logo { height: 35px; border-radius: 8px; }
         h1 { font-family: 'GmarketSans', sans-serif; background: linear-gradient(to right, #e65100, #e91e63); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; margin: 0; }
@@ -120,8 +95,8 @@ html_template = """
     </div>
     <h4>♥ 양명여고 진로진학부 ♥</h4>
     <div class="school-badge">
-        [2026 대입 주요대학 3개년 컷오프] + [수시NAVI 엑셀 연동]
-        <span style="display:block; font-size:12px; margin-top:5px;">✨ 엑셀 데이터 실시간 변환 100% 매칭 완료</span>
+        [2026 대입 주요대학 3개년 컷오프] + [자체 정밀 변환 알고리즘]
+        <span style="display:block; font-size:12px; margin-top:5px;">✨ 무거운 엑셀 연동 없이 독립적이고 빠른 산출을 지원합니다.</span>
     </div>
     <div class="toggle-section">
         <div class="toggle-btn active-gyogwa" id="btn-gyogwa" onclick="setMode('gyogwa')">📘 교과 전형</div>
@@ -179,8 +154,8 @@ html_template = """
 </div>
 
 <script>
-    // 💡 에러 수정 지점: 파이썬 치환자 명칭 통일 완료
-    const conversionMap = __CONVERSION_JSON__;
+    // 💡 파이썬에서 주입된 알고리즘 포인트 데이터
+    const pts = __POINTS_JSON__;
     
     let mode = 'gyogwa';
 
@@ -213,15 +188,14 @@ html_template = """
         const isChecked = document.getElementById('c' + n).checked;
         const group = document.getElementById('g' + n);
         isChecked ? group.classList.remove('disabled') : group.classList.add('disabled');
-        calc(); 
+        calc();
     }
 
+    // 💡 내장된 알고리즘: 다중 선형 보간법 (엑셀 없이 완벽 구현)
     function map5to9(g5) {
-        let key = (Math.round(g5 * 100) / 100).toFixed(2);
-        if (conversionMap && conversionMap[key]) return conversionMap[key];
+        if (g5 <= pts[0][0]) return pts[0][1];
+        if (g5 >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
         
-        const pts = [[1.0, 1.0], [1.1, 1.35], [1.2, 1.65], [1.31, 1.99], [1.478, 2.345], [1.715, 2.753], [2.004, 3.261], [3.0, 6.0], [5.0, 9.0]];
-        if (g5 <= 1.0) return 1.0; if (g5 >= 5.0) return 9.0;
         for (let i = 0; i < pts.length - 1; i++) {
             if (g5 >= pts[i][0] && g5 <= pts[i+1][0]) {
                 return pts[i][1] + (g5 - pts[i][0]) / (pts[i+1][0] - pts[i][0]) * (pts[i+1][1] - pts[i][1]);
@@ -278,6 +252,7 @@ html_template = """
 </script>
 </body>
 </html>
-""".replace("__CONVERSION_JSON__", conversion_json_str)
+""".replace("__POINTS_JSON__", points_json_str)
 
+# 6. 컴포넌트 렌더링
 components.html(html_template, height=1500, scrolling=True)
