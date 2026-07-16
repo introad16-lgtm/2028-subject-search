@@ -63,7 +63,7 @@ def get_excel_mapping_dict():
 
 conversion_json_str = json.dumps(get_excel_mapping_dict())
 
-# 5. HTML 템플릿 (UI 레이아웃 및 엑셀 데이터 안전 주입)
+# 5. HTML 템플릿 (UI 레이아웃 및 에러 해결 버전)
 html_template = """
 <!DOCTYPE html>
 <html lang="ko">
@@ -179,7 +179,7 @@ html_template = """
 </div>
 
 <script>
-    // 💡 안전하게 치환된 엑셀 데이터 테이블
+    // 💡 에러 수정 지점: 파이썬 치환자 명칭 통일 완료
     const conversionMap = __CONVERSION_JSON__;
     
     let mode = 'gyogwa';
@@ -213,10 +213,9 @@ html_template = """
         const isChecked = document.getElementById('c' + n).checked;
         const group = document.getElementById('g' + n);
         isChecked ? group.classList.remove('disabled') : group.classList.add('disabled');
-        calc();
+        calc(); 
     }
 
-    // 엑셀 데이터 매핑 알고리즘
     function map5to9(g5) {
         let key = (Math.round(g5 * 100) / 100).toFixed(2);
         if (conversionMap && conversionMap[key]) return conversionMap[key];
@@ -257,7 +256,7 @@ html_template = """
             else if(avg9 <= 2.6) { u = "국숭세단 / 과기대"; d = "국민, 숭실, 세종, 단국, 과기대 등"; }
             else if(avg9 <= 3.1) { u = "광명상가 / 지거국 상위"; d = "광운, 명지, 상명, 가톨릭, 부산 등"; }
             else if(avg9 <= 3.6) { u = "인가경 / 수도권 주요"; d = "인천, 가천, 경기, 충남, 전남 등"; }
-            else if(avg9 <= 4.2) { d = "수도권 중위 / 지거국"; d = "수원, 강남, 안양, 강원, 전북 등"; }
+            else if(avg9 <= 4.2) { u = "수도권 중위 / 지거국"; d = "수원, 강남, 안양, 강원, 전북 등"; }
             else { u = "기타 지역 / 전문대"; d = "전국 권역별 일반 전형"; }
         } else {
             if(avg9 <= 1.7) { u = "SKY / 핵심과기원"; d = "서울대, 연세대, 고려대, 카이스트 등"; }
@@ -272,6 +271,8 @@ html_template = """
         }
         document.getElementById('univ').innerText = u;
         document.getElementById('univ-desc').innerText = d;
+        
+        window.parent.postMessage({type: 'streamlit:setComponentValue', value: avg9}, '*');
     }
     window.onload = calc;
 </script>
@@ -279,5 +280,4 @@ html_template = """
 </html>
 """.replace("__CONVERSION_JSON__", conversion_json_str)
 
-# 6. 컴포넌트 렌더링
-components.html(final_html, height=1500, scrolling=True)
+components.html(html_template, height=1500, scrolling=True)
